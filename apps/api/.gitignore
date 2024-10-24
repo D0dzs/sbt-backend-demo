@@ -1,0 +1,7 @@
+# Environment variables
+.env
+
+# Prisma
+prisma/dev.db
+prisma/migrations
+prisma/*.*-journal
