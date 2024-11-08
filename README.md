@@ -6,7 +6,7 @@ This is an official starter Turborepo.
 
 Run the following command:
 
-```sh
+```powershell
 npx create-turbo@latest
 ```
 
