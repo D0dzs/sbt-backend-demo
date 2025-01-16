@@ -1,19 +1,10 @@
-import express from 'express';
-import {         
-    getUser, 
-    createUser,
-    updateUser,
-    deleteUser
-} from require('../controllers');  
+import { Router } from 'express';
+import { getUser, deleteUser, updateUser } from '../controllers/user.controller.js';
 
-const app = express();
+const userRouter = Router();
 
-router.post("/register", createUser);
+userRouter.get('/getuser', getUser);
+userRouter.post('/deleteUser', deleteUser);
+userRouter.post('/updateUser', updateUser);
 
-router.get("/getuser", getUser);
-
-router.post("/deleteUser", deleteUser);
-
-router.post("/updateUser", updateUser);
-
-export default router;
+export default userRouter;

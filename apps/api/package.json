@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon .",
-    "prismaclient": "npx prisma generate --schema=./prisma/schema.prisma"
+    "prismadb": "npx prisma generate --schema=apps/api/prisma/schema.prisma"
   },
   "keywords": [],
   "author": "",
