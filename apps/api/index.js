@@ -7,6 +7,8 @@ import cors from 'cors';
  */
 import userRouter from './routers/user.router.js';
 
+const UserEndpoint = '/user/getuser';
+
 const app = express();
 const PORT = process.env.API_PORT;
 
