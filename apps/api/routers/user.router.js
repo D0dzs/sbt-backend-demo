@@ -3,8 +3,8 @@ import { getUser, deleteUser, updateUser } from '../controllers/user.controller.
 
 const userRouter = Router();
 
-userRouter.get('/getuser', getUser);
-userRouter.post('/deleteUser', deleteUser);
-userRouter.post('/updateUser', updateUser);
+userRouter.get('/get', getUser);
+userRouter.post('/delete', deleteUser);
+userRouter.post('/update', updateUser);
 
 export default userRouter;
