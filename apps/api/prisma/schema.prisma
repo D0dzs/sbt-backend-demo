@@ -13,7 +13,6 @@ model User {
   password  String
   state     Boolean  @default(false)
   createdAt DateTime @default(now())
-  username  String?
   avatarURL String?
 
   Post     Post[]
@@ -27,6 +26,7 @@ model Post {
   id            String    @id @default(cuid())
   title         String
   content       String
+  shortDesc     String
   publishedById String
   publishedAt   DateTime  @default(now())
   bannerURL     String?
@@ -38,8 +38,8 @@ model Post {
 }
 
 model Role {
-  id       String     @id @default(cuid())
-  name     String
+  id   String @id @default(cuid())
+  name String
 
   UserRole UserRole[]
 
@@ -51,8 +51,8 @@ model Group {
   name        String
   description String
   leaderId    String
-  
-  leader      User   @relation(fields: [leaderId], references: [id])
+
+  leader User @relation(fields: [leaderId], references: [id])
 
   @@map("groups")
 }
