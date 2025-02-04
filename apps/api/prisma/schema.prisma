@@ -26,6 +26,7 @@ model User {
 
 model Post {
   id            String    @id @default(cuid())
+  slug          String    @unique
   title         String
   content       String
   shortDesc     String
@@ -54,9 +55,20 @@ model Group {
   description String
   leaderId    String
 
-  leader User @relation(fields: [leaderId], references: [id])
+  leader   User       @relation(fields: [leaderId], references: [id])
+  SubGroup SubGroup[]
 
   @@map("groups")
+}
+
+model SubGroup {
+  id      String @id @default(cuid())
+  name    String
+  groupId String
+
+  group Group @relation(fields: [groupId], references: [id])
+
+  @@map("sub_groups")
 }
 
 model UserRole {
