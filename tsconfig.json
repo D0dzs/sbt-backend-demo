@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "sourceMap": true,
+    "outDir": "dist",
+    "strict": true,
+    "lib": ["esnext"],
+    "esModuleInterop": true,
+    "typeRoots": ["./node_modules/@types", "./src/types"],
+    "types": ["express", "node"],
+    "moduleResolution": "node",
+    "target": "es6",
+    "module": "CommonJS"
+  },
+  "include": ["src/**/*"]
+}

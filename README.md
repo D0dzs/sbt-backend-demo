@@ -1,26 +1,29 @@
-# BME Backend
+# BME SolarBoatTeam - Backend
 
-### Prerequisites
+_This is an exam project for a small group of students._<br />
 
-- Node.js (LTS version is recommended)
+## Technologies Used
 
-### Installation
+- **@prisma/client** - ORM for database interactions
+- **bcrypt** - Library for hashing passwords
+- **cors** - Middleware for enabling CORS in Express
+- **dotenv** - Library for loading environment variables
+- **express** - Web framework for Node.js
+- **jsonwebtoken** - Library for generating and verifying JSON Web Tokens
+- **zod** - Library for data validation 
 
-1. Clone the repository
-2. Navigate to the project directory
-3. Install the dependencies (using `npm install`)
-4. Copy the `.env.template` file and rename it to `.env` and fill in the required values
-5. Start the server (using `npm run dev`)
 
-## Usage
-To reach the API, use the following URL: `http://localhost:{{PORT}}/api/`
+![Prisma](https://img.shields.io/badge/Prisma-2D3748?style=for-the-badge&logo=prisma&logoColor=white)
+![Express](https://img.shields.io/badge/Express-0c0c0c?style=for-the-badge&logo=express&logoColor=white)
+![Zod](https://img.shields.io/badge/Zod-274d82?style=for-the-badge&logo=zod&logoColor=white)
 
-## License
-This project is licensed under the MIT License - see the [LICENSE](https://opensource.org/license/mit) file for details.
+## How to Run the Server Locally
 
-## Used Technologies
-![](https://img.shields.io/badge/Express.js-404D59?style=for-the-badge&logo=express&logoColor=white)
-![](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=Node.js&logoColor=white)
-![](https://img.shields.io/badge/Turborepo-EF4444?style=for-the-badge&logo=turborepo&logoColor=white)
-![](https://img.shields.io/badge/Prisma-3982CE?style=for-the-badge&logo=Prisma&logoColor=white)
- 
+1. Clone the repository **`git clone`**
+2. Install dependencies using **`pnpm install`**
+3. Run the development server using **`pnpm run dev`**
+4. Open [localhost:8080/api](http://localhost:8080/api/) with your browser or using [Postman (recommended)](https://www.postman.com/) to test the API endpoints.
+
+# License
+
+This project is licensed under the [MIT License](https://opensource.org/license/mit).

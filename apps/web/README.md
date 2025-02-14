@@ -1,1 +1,0 @@
-[BME Solar Boat Team Frontend can be found on this repository!](https://github.com/BME-SolarBoatTeam/sbt-frontend)
