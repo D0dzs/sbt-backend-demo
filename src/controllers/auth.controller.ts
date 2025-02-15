@@ -4,8 +4,8 @@ import jwt from "jsonwebtoken";
 
 import { Request, Response } from "express";
 import prisma from "../../lib/db";
-import { LoginSchema } from "../schemas/LoginFormSchema";
-import { User } from "../schemas/UserSchema";
+import LoginSchema from "../schemas/LoginFormSchema";
+import UserSchema from "../schemas/UserSchema";
 
 const SALT = process.env.PASSWORD_SALT!;
 const JWT = process.env.JWT_KEY!;
@@ -33,7 +33,7 @@ const login = async (req: Request, res: Response): Promise<any> => {
     return res.status(400).json({ errors });
   }
 
-  const { email, password } = body;
+  const { email, password } = parsed.data;
 
   const user = await prisma.user.findFirst({ where: { email: email } });
   if (!user) return res.status(401).json({ message: "Failed to fetch the user" });
@@ -50,7 +50,7 @@ const login = async (req: Request, res: Response): Promise<any> => {
 
 const register = async (req: Request, res: Response): Promise<any> => {
   const body = req.body;
-  const parsed = User.safeParse(body);
+  const parsed = UserSchema.safeParse(body);
   if (!parsed.success) {
     const errors = parsed.error.errors.filter((error) => error.message !== "Required").map((error) => error.message);
 
@@ -103,4 +103,23 @@ const getRequestedUser = async (req: Request, res: Response): Promise<any> => {
   res.status(200).json({ user });
 };
 
-export { login, register, getRequestedUser };
+const verifyToken = async (req: Request, res: Response): Promise<any> => {
+  const token = req.headers.authorization?.split(" ")[1];
+
+  if (!token) return res.status(400).json({ message: "No token provided" });
+
+  try {
+    jwt.verify(token, JWT);
+  } catch (error) {
+    if (error instanceof jwt.JsonWebTokenError) {
+      return res.status(401).json({ message: "Invalid token" });
+    }
+    if (error instanceof jwt.TokenExpiredError) {
+      return res.status(401).json({ message: "Invalid token" });
+    }
+    return res.status(500).json({ message: "Internal server error" });
+  }
+  return res.status(200).json(true);
+};
+
+export { login, register, getRequestedUser, verifyToken };

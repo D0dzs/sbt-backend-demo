@@ -9,4 +9,4 @@ const UpdatePostSchema = z.object({
 
 type UpdatePostSchema = z.infer<typeof UpdatePostSchema>;
 
-export { UpdatePostSchema };
+export default UpdatePostSchema;

@@ -6,8 +6,7 @@ import express, { Request, Response } from "express";
 
 import authRouter from "./routers/auth.router";
 import postRouter from "./routers/post.router";
-import authWare from "./middlewares/authWare";
-import { userRole } from "../lib/utils";
+import sponsorRouter from "./routers/sponsor.router";
 
 const app = express();
 
@@ -16,16 +15,7 @@ app.use(express.json());
 
 app.use("/api/auth", authRouter);
 app.use("/api/post", postRouter);
-
-// app.get("/api/test", authWare, async (req: Request, res: Response) => {
-//   const user = (req as any).user;
-//   const role = await userRole(user);
-//   if (role !== "admin") {
-//     res.status(403).json({ message: "Forbidden" });
-//   } else {
-//     res.json("OK!");
-//   }
-// });
+app.use("/api/sponsor", sponsorRouter);
 
 app.get("/api", (req: Request, res: Response) => {
   res.json("OK!");

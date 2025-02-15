@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const Post = z.object({
+const PostSchema = z.object({
   title: z
     .string({ message: "Title field is required to be filled out!" })
     .min(2, { message: "Title should me more than 2 characters long!" }),
@@ -10,6 +10,6 @@ const Post = z.object({
   }),
 });
 
-type Post = z.infer<typeof Post>;
+type PostSchema = z.infer<typeof PostSchema>;
 
-export { Post };
+export default PostSchema;

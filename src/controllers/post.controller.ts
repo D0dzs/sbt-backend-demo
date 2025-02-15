@@ -1,15 +1,17 @@
 import { Request, Response } from "express";
 import prisma from "../../lib/db";
-import { Post } from "../schemas/PostSchema";
+import { userRole } from "../../lib/utils";
+import PostSchema from "../schemas/PostSchema";
 import UpdatePostSchema from "../schemas/UpdatePostSchema";
+import DeletePostSchema from "../schemas/DeletePostSchema";
 
 const generateSlugForPost = async (title: string): Promise<string> => {
-  return title.replaceAll(" ", "-").toLowerCase().trim();
+  return encodeURI(title);
 };
 
 const createPost = async (req: Request, res: Response): Promise<any> => {
   const body = req.body;
-  const parsed = Post.safeParse(body);
+  const parsed = PostSchema.safeParse(body);
   const userId = (req as any).user.id;
 
   if (!parsed.success) {
@@ -20,7 +22,7 @@ const createPost = async (req: Request, res: Response): Promise<any> => {
     }
   }
 
-  const { title, content, shortDesc } = body;
+  const { title, content, shortDesc } = parsed.data;
   const slug = await generateSlugForPost(title);
 
   try {
@@ -43,7 +45,7 @@ const createPost = async (req: Request, res: Response): Promise<any> => {
   } catch (error) {
     const target = (error as any).meta.target[0];
     if (target === "slug") {
-      return res.status(400).json({ message: "Slug already exists, please change the title to somehting else!" });
+      return res.status(400).json({ message: "Slug already exists, please change the title to something else!" });
     }
   }
 
@@ -71,6 +73,7 @@ const getAllPost = async (req: Request, res: Response): Promise<any> => {
       content: true,
       shortDesc: true,
       slug: true,
+      bannerURL: true,
     },
   });
 
@@ -79,25 +82,68 @@ const getAllPost = async (req: Request, res: Response): Promise<any> => {
 
 const updatePost = async (req: Request, res: Response): Promise<any> => {
   const user = await (req as any).user;
-  console.log(user);
+  const role = await userRole(user);
 
   const body = req.body;
-  const parsedBody = UpdatePostSchema.safeParse(body);
+  const parsed = UpdatePostSchema.safeParse(body);
 
-  if (!parsedBody.success) {
+  if (!parsed.success) {
     return res.status(400).json({ message: "Invalid post data" });
   }
-  const { postId, title, content, shortDesc } = body;
+
+  const { postId, title, content, shortDesc } = parsed.data;
   const slug = await generateSlugForPost(title);
 
-  const ctx = await prisma.post.update({
-    where: { id: postId },
-    data: { title, slug, content, shortDesc, modifiedAt: new Date() },
-  });
+  if (role === "admin") {
+    const ctx = await prisma.post.update({
+      where: { id: postId },
+      data: { title, slug, content, shortDesc, modifiedAt: new Date() },
+    });
 
-  if (!ctx) return res.status(404).json({ message: "No post found" });
+    if (!ctx) return res.status(404).json({ message: "No post found" });
+    return res.status(200).json({ message: "Post updated successfully" });
+  } else {
+    const ctx = await prisma.post.update({
+      where: { id: postId, publishedById: user.id },
+      data: { title, slug, content, shortDesc, modifiedAt: new Date() },
+    });
 
-  return res.status(200).json({ message: "Post updated successfully" });
+    if (!ctx) return res.status(404).json({ message: "No post found" });
+    return res.status(200).json({ message: "Post updated successfully" });
+  }
+
+  return res.status(500).json({ message: "Internal server error" });
 };
 
-export { createPost, getPost, getAllPost, updatePost };
+const deletePost = async (req: Request, res: Response): Promise<any> => {
+  const user = (req as any).user;
+  const role = await userRole(user);
+
+  const body = req.body;
+  const parsed = DeletePostSchema.safeParse(body);
+
+  if (!parsed.success) {
+    return res.status(400).json({ message: "Invalid post data" });
+  }
+
+  const { postId } = parsed.data;
+  if (role === "admin") {
+    const ctx = await prisma.post.delete({
+      where: { id: postId },
+    });
+
+    if (!ctx) return res.status(404).json({ message: "No post found" });
+
+    return res.status(200).json({ message: "Post deleted successfully" });
+  }
+
+  const ctx = await prisma.post.delete({
+    where: { id: postId, publishedById: user.id },
+  });
+
+  if (!ctx) return res.status(404).json({ message: "No post found or user is not authorized to delete this post!" });
+
+  return res.status(200).json({ message: "Post deleted successfully" });
+};
+
+export { createPost, getPost, getAllPost, updatePost, deletePost };
