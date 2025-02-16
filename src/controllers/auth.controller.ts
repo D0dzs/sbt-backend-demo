@@ -6,6 +6,7 @@ import { Request, Response } from "express";
 import prisma from "../../lib/db";
 import LoginSchema from "../schemas/LoginFormSchema";
 import UserSchema from "../schemas/UserSchema";
+import { userRole } from "../../lib/utils";
 
 const SALT = process.env.PASSWORD_SALT!;
 const JWT = process.env.JWT_KEY!;
@@ -49,6 +50,11 @@ const login = async (req: Request, res: Response): Promise<any> => {
 };
 
 const register = async (req: Request, res: Response): Promise<any> => {
+  const rUser = (req as any).user;
+
+  const role = await userRole(rUser);
+  if (role !== "admin") return res.status(401).json({ message: "Unauthorized" });
+
   const body = req.body;
   const parsed = UserSchema.safeParse(body);
   if (!parsed.success) {
@@ -119,7 +125,7 @@ const verifyToken = async (req: Request, res: Response): Promise<any> => {
     }
     return res.status(500).json({ message: "Internal server error" });
   }
-  return res.status(200).json(true);
+  return res.status(200).json({ valid: true });
 };
 
 export { login, register, getRequestedUser, verifyToken };

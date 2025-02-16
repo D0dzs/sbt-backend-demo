@@ -16,5 +16,6 @@ const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 const sponsorRouter = Router();
 
 sponsorRouter.post("/upload", authWare, upload.single("sLogo"), uploadSponsor);
+// sponsorRouter.delete("/delete", authWare, deleteSponsor);
 
 export default sponsorRouter;

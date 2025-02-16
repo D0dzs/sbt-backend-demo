@@ -5,7 +5,7 @@ import authWare from "../middlewares/authWare";
 const authRouter = Router();
 
 authRouter.post("/login", login);
-authRouter.post("/register", register);
+authRouter.post("/register", authWare, register);
 authRouter.post("/verify-token", authWare, verifyToken);
 authRouter.get("/me", authWare, getRequestedUser);
 
