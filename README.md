@@ -10,7 +10,7 @@ _This is an exam project for a small group of students._<br />
 - **dotenv** - Library for loading environment variables
 - **express** - Web framework for Node.js
 - **jsonwebtoken** - Library for generating and verifying JSON Web Tokens
-- **zod** - Library for data validation 
+- **zod** - Library for data validation
 
 
 ![Prisma](https://img.shields.io/badge/Prisma-2D3748?style=for-the-badge&logo=prisma&logoColor=white)
@@ -19,6 +19,7 @@ _This is an exam project for a small group of students._<br />
 
 ## How to Run the Server Locally
 
+0. To install **pnpm** on [**Windows**](https://pnpm.io/installation#on-windows), [**macOS**](https://pnpm.io/installation#on-macos), or [**Linux**](https://pnpm.io/installation#on-linux) please visit the official website and follow the instructions.
 1. Clone the repository **`git clone`**
 2. Install dependencies using **`pnpm install`**
 3. Run the development server using **`pnpm run dev`**
