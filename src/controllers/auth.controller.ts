@@ -37,7 +37,10 @@ const login = async (req: Request, res: Response): Promise<any> => {
   const { email, password } = parsed.data;
 
   const user = await prisma.user.findFirst({ where: { email: email } });
-  if (!user) return res.status(401).json({ message: "Failed to fetch the user" });
+  if (!user) return res.status(401).json({ message: "Invalid email or password!" });
+
+  // Check if the user is suspended or not
+  if (user.state) return res.status(401).json({ message: "Your account has been suspended!" });
 
   const isMatch = await bcrypt.compare(password, user.password);
 
