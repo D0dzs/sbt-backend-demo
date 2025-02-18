@@ -14,13 +14,13 @@ const createPost = async (req: Request, res: Response): Promise<any> => {
   const parsed = PostSchema.safeParse(body);
   const userId = (req as any).user.id;
 
+  // if (!parsed.success) {
   if (!parsed.success) {
-    if (!parsed.success) {
-      const errors = parsed.error.errors.map((error) => error.message);
+    const errors = parsed.error.errors.map((error) => error.message);
 
-      return res.status(400).json({ errors });
-    }
+    return res.status(400).json({ errors });
   }
+  // }
 
   const { title, content, shortDesc } = parsed.data;
   const slug = await generateSlugForPost(title);
@@ -81,7 +81,7 @@ const getAllPost = async (req: Request, res: Response): Promise<any> => {
 };
 
 const updatePost = async (req: Request, res: Response): Promise<any> => {
-  const user = await (req as any).user;
+  const user = (req as any).user;
   const role = await userRole(user);
 
   const body = req.body;
@@ -111,8 +111,6 @@ const updatePost = async (req: Request, res: Response): Promise<any> => {
     if (!ctx) return res.status(404).json({ message: "No post found" });
     return res.status(200).json({ message: "Post updated successfully" });
   }
-
-  return res.status(500).json({ message: "Internal server error" });
 };
 
 const deletePost = async (req: Request, res: Response): Promise<any> => {

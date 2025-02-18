@@ -5,7 +5,7 @@ import authWare from "../middlewares/authWare";
 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => {
-    cb(null, "uploads/sponsors/");
+    cb(null, "uploads/sponsor/");
   },
   filename: (_req, file, cb) => {
     cb(null, `${Date.now()}-${encodeURI(file.originalname)}`);

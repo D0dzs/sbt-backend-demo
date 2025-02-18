@@ -32,7 +32,7 @@ const uploadSponsor = async (req: Request, res: Response): Promise<any> => {
       data: {
         name: sName,
         logoUrl: filePath,
-        website: sWebUrl,
+        websiteUrl: sWebUrl,
         sponsorGroupId: categoryId,
       },
     });
@@ -47,7 +47,7 @@ const uploadSponsor = async (req: Request, res: Response): Promise<any> => {
 
 const getSponsors = async (req: Request, res: Response) => {
   try {
-    const sponsors = await prisma.sponsor.findMany({});
+    const sponsors = await prisma.sponsor.findMany();
     res.status(200).json(sponsors);
   } catch (error) {
     res.status(500).json({ error: "Internal Server Error" });

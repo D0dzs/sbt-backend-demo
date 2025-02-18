@@ -1,5 +1,5 @@
 generator client {
-  provider        = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -51,7 +51,7 @@ model Role {
 
 model Group {
   id          String @id @default(cuid())
-  name        String
+  name        String @unique
   description String
   leaderId    String
 
@@ -63,10 +63,10 @@ model Group {
 
 model SubGroup {
   id      String @id @default(cuid())
-  name    String
+  name    String @unique
   groupId String
 
-  group Group @relation(fields: [groupId], references: [id])
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
   @@map("sub_groups")
 }
@@ -98,7 +98,7 @@ model Sponsor {
   websiteUrl     String
   sponsorGroupId String
 
-  sponsorGroup SponsorGroup @relation(fields: [sponsorGroupId], references: [id])
+  sponsorGroup SponsorGroup @relation(fields: [sponsorGroupId], references: [id], onDelete: Cascade)
 
   @@map("sponsors")
 }
