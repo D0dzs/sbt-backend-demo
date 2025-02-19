@@ -3,8 +3,6 @@ import prisma from "./db";
 import jwt from "jsonwebtoken";
 
 const userRole = async (user: any): Promise<any> => {
-  console.log(user);
-
   return { message: "Failed to look up for role" };
 };
 

@@ -181,7 +181,6 @@ const refresh = async (req: Request, res: Response): Promise<any> => {
 
       return res.status(200).json(true);
     } catch (error) {
-      console.log(error);
       return res.status(500).json({ message: "Internal Server Error  3" });
     }
   } catch (error) {
