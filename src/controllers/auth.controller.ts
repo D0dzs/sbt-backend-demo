@@ -1,19 +1,15 @@
 import bcrypt from "bcrypt";
 import "dotenv/config";
-import jwt from "jsonwebtoken";
 
 import { Request, Response } from "express";
+import jwt, { TokenExpiredError } from "jsonwebtoken";
 import prisma from "../../lib/db";
+import { generateRefresh, generateToken, userRole } from "../../lib/utils";
 import LoginSchema from "../schemas/LoginFormSchema";
 import UserSchema from "../schemas/UserSchema";
-import { userRole } from "../../lib/utils";
 
 const SALT = process.env.PASSWORD_SALT!;
-const JWT = process.env.JWT_KEY!;
-
-const generateToken = (id: string) => {
-  return jwt.sign({ id }, JWT, { expiresIn: "45min" });
-};
+const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET!;
 
 const hashPassword = async (password: string) => {
   const hash = await bcrypt.hash(password, parseInt(SALT));
@@ -45,8 +41,40 @@ const login = async (req: Request, res: Response): Promise<any> => {
   const isMatch = await bcrypt.compare(password, user.password);
 
   if (isMatch) {
-    const token = generateToken(user.id);
-    return res.status(200).json({ message: "Succesfully logged in!", token });
+    const token = await generateToken(user.id);
+    const refreshToken = await generateRefresh(user.id);
+
+    const hashedRefreshToken = await bcrypt.hash(refreshToken, parseInt(SALT));
+    const tokenExist = await prisma.refreshToken.findFirst({ where: { userId: user.id } });
+    if (tokenExist) await prisma.refreshToken.delete({ where: { id: tokenExist.id } });
+
+    const recordRFTtoDb = await prisma.refreshToken.create({
+      data: {
+        userId: user.id,
+        token: hashedRefreshToken,
+        expiresAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+      },
+    });
+
+    if (!recordRFTtoDb) return res.status(500).json({ message: "Internal server error" });
+
+    res.cookie("token", token, {
+      secure: true,
+      httpOnly: true,
+      sameSite: "strict",
+      // valid for 45 minutes (1 minute for testing)
+      maxAge: 1 * 60 * 1000,
+    });
+
+    res.cookie("refreshToken", refreshToken, {
+      secure: true,
+      httpOnly: true,
+      sameSite: "strict",
+      path: "/api/auth/refresh",
+      // valid for 5 days
+      maxAge: 5 * 24 * 60 * 60 * 1000,
+    });
+    return res.status(200).json({ message: "Succesfully logged in!" });
   }
 
   return res.status(400).json({ message: "Invalid email or password!" });
@@ -92,43 +120,73 @@ const getRequestedUser = async (req: Request, res: Response): Promise<any> => {
       firstName: true,
       lastName: true,
       createdAt: true,
-      UserRole: {
-        select: {
-          role: {
-            select: {
-              name: true,
-            },
-          },
-        },
-      },
+      UserRole: { select: { role: { select: { name: true } } } },
     },
     where: { id: (req as any).user.id },
   });
 
-  if (!user) {
-    return res.status(404).json({ message: "User not found" });
-  }
+  if (!user) return res.status(404).json({ message: "User not found" });
 
   res.status(200).json({ user });
 };
 
-const verifyToken = async (req: Request, res: Response): Promise<any> => {
-  const token = req.headers.authorization?.split(" ")[1];
-
-  if (!token) return res.status(400).json({ message: "No token provided" });
+const refresh = async (req: Request, res: Response): Promise<any> => {
+  const refreshToken = req.cookies.refreshToken;
+  if (!refreshToken) {
+    res.redirect("/");
+    return res.status(400).json({ message: "Unauthorized" });
+  }
 
   try {
-    jwt.verify(token, JWT);
+    const { id } = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET) as { id: string };
+
+    const newAccessToken = await generateToken(id);
+    const newRefreshToken = await generateRefresh(id);
+    const hashedRefreshToken = await bcrypt.hash(newRefreshToken, parseInt(SALT));
+
+    try {
+      const ctx = await prisma.refreshToken.upsert({
+        where: { userId: id },
+        update: {
+          token: hashedRefreshToken,
+          createdAt: new Date(),
+          expiresAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+        },
+        create: {
+          token: hashedRefreshToken,
+          userId: id,
+          createdAt: new Date(),
+          expiresAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+        },
+      });
+
+      if (!ctx) return res.status(500).json({ message: "Internal Server Error  1" });
+
+      res.cookie("token", newAccessToken, {
+        secure: true,
+        httpOnly: true,
+        sameSite: "strict",
+        // valid for 45 minutes (1 minute for testing)
+        maxAge: 1 * 60 * 1000,
+      });
+
+      res.cookie("refreshToken", newRefreshToken, {
+        secure: true,
+        httpOnly: true,
+        sameSite: "strict",
+        path: "/api/auth/refresh",
+        // valid for 5 days
+        maxAge: 5 * 24 * 60 * 60 * 1000,
+      });
+
+      return res.status(200).json(true);
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({ message: "Internal Server Error  3" });
+    }
   } catch (error) {
-    if (error instanceof jwt.JsonWebTokenError) {
-      return res.status(401).json({ message: "Invalid token" });
-    }
-    if (error instanceof jwt.TokenExpiredError) {
-      return res.status(401).json({ message: "Invalid token" });
-    }
-    return res.status(500).json({ message: "Internal server error" });
+    if (error instanceof TokenExpiredError) return res.status(401).json({ message: "Unauthorized 2" });
   }
-  return res.status(200).json({ valid: true });
 };
 
-export { login, register, getRequestedUser, verifyToken };
+export { getRequestedUser, login, refresh, register };

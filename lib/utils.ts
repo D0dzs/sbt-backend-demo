@@ -1,32 +1,28 @@
 import "dotenv/config";
-import { parse as parseCookie } from "cookie";
 import prisma from "./db";
-
-const extractToken = async (cookie: string): Promise<any> => {
-  try {
-    const token = parseCookie(cookie)["token"];
-    if (!token) return undefined;
-
-    return token;
-  } catch (error) {
-    return { message: "Failed to extract token" };
-  }
-};
+import jwt from "jsonwebtoken";
 
 const userRole = async (user: any): Promise<any> => {
-  const role = user.UserRole[0].roleId;
-  const ctx = await prisma.role.findUnique({
-    where: {
-      id: role,
-    },
-    select: {
-      name: true,
-    },
-  });
+  console.log(user);
 
-  if (!ctx) return { message: "Failed to look up for role" };
-
-  return ctx.name.toLowerCase().trim();
+  return { message: "Failed to look up for role" };
 };
 
-export { extractToken, userRole };
+const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET!;
+const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET!;
+
+const generateToken = async (id: string): Promise<string> => {
+  const accessToken = jwt.sign({ id }, ACCESS_TOKEN_SECRET, {
+    expiresIn: "1m",
+  });
+  return accessToken;
+};
+
+const generateRefresh = async (id: string): Promise<string> => {
+  const refreshToken = jwt.sign({ id }, REFRESH_TOKEN_SECRET, {
+    expiresIn: "5d",
+  });
+  return refreshToken;
+};
+
+export { userRole, generateToken, generateRefresh };

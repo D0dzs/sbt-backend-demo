@@ -20,6 +20,7 @@ model User {
   Post     Post[]
   Group    Group[]
   UserRole UserRole[]
+  RefreshToken RefreshToken[]
 
   @@map("users")
 }
@@ -101,4 +102,17 @@ model Sponsor {
   sponsorGroup SponsorGroup @relation(fields: [sponsorGroupId], references: [id], onDelete: Cascade)
 
   @@map("sponsors")
+}
+
+model RefreshToken {
+  id        String @id @default(cuid())
+  token     String @unique
+  userId    String @unique
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  revoked   Boolean @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
 }

@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import { validateMIMEType } from "validate-image-type";
-import SponsorSchema from "../schemas/SponsorSchema";
-import prisma, { getCategoryByName } from "../../lib/db";
 import fs from "fs";
+import { validateMIMEType } from "validate-image-type";
+import prisma, { getCategoryByName } from "../../lib/db";
+import SponsorSchema from "../schemas/SponsorSchema";
 
 const uploadSponsor = async (req: Request, res: Response): Promise<any> => {
   try {
@@ -45,9 +45,9 @@ const uploadSponsor = async (req: Request, res: Response): Promise<any> => {
   }
 };
 
-const getSponsors = async (req: Request, res: Response) => {
+const getSponsors = async (_req: Request, res: Response) => {
   try {
-    const sponsors = await prisma.sponsor.findMany();
+    const sponsors = await prisma.sponsor.findMany({ omit: { id: true } });
     res.status(200).json(sponsors);
   } catch (error) {
     res.status(500).json({ error: "Internal Server Error" });
