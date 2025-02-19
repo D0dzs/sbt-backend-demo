@@ -4,9 +4,10 @@ import authWare from "../middlewares/authWare";
 
 const authRouter = Router();
 
+// This handles user model, authentication, and authorization
+authRouter.post("/refresh", refresh);
 authRouter.post("/login", login);
 authRouter.post("/register", authWare, register);
-authRouter.post("/refresh", refresh);
 authRouter.get("/me", authWare, getRequestedUser);
 
 export default authRouter;

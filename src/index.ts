@@ -8,7 +8,6 @@ import authRouter from "./routers/auth.router";
 import postRouter from "./routers/post.router";
 import sponsorRouter from "./routers/sponsor.router";
 import groupRouter from "./routers/group.router";
-import authWare from "./middlewares/authWare";
 import cookieParser from "cookie-parser";
 
 const app = express();
@@ -26,10 +25,6 @@ app.use("/api/auth", authRouter);
 app.use("/api/post", postRouter);
 app.use("/api/sponsor", sponsorRouter);
 app.use("/api/group", groupRouter);
-
-app.get("/api/test", authWare, (req: Request, res: Response) => {
-  res.json("OK!");
-});
 
 app.get("/api", (req: Request, res: Response) => {
   res.json("OK!");

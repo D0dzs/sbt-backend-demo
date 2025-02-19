@@ -3,6 +3,9 @@ import fs from "fs";
 import { validateMIMEType } from "validate-image-type";
 import prisma, { getCategoryByName } from "../../lib/db";
 import SponsorSchema from "../schemas/SponsorSchema";
+import SponsorGroupSchema from "../schemas/SponsorGroupSchema";
+import { userRole } from "../../lib/utils";
+import DeleteSponsorSchema from "../schemas/DeleteSponsorSchema";
 
 const uploadSponsor = async (req: Request, res: Response): Promise<any> => {
   try {
@@ -54,4 +57,64 @@ const getSponsors = async (_req: Request, res: Response) => {
   }
 };
 
-export { getSponsors, uploadSponsor };
+const createSponsorGroup = async (req: Request, res: Response): Promise<any> => {
+  const user = (req as any).user;
+  const role = await userRole(user);
+  if (role !== "admin") {
+    return res.status(403).json({ error: "Unauthorized" });
+  }
+
+  try {
+    const body = req.body;
+    const parsed = SponsorGroupSchema.safeParse(body);
+
+    if (!parsed.success) {
+      const errors = parsed.error.errors.map((error) => error.message);
+      return res.status(400).json({ errors });
+    }
+
+    const { name } = parsed.data;
+    const ctx = await prisma.sponsorGroup.create({
+      data: {
+        name,
+      },
+    });
+
+    if (!ctx) return res.status(500).json({ error: "Failed to create sponsor group" });
+
+    return res.status(200).json({ message: "Sponsor group created successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+const deleteSponsor = async (req: Request, res: Response): Promise<any> => {
+  const user = (req as any).user;
+  const role = await userRole(user);
+  if (role !== "admin") {
+    return res.status(403).json({ error: "Unauthorized" });
+  }
+
+  try {
+    const body = req.body;
+    const parsed = DeleteSponsorSchema.safeParse(body);
+
+    if (!parsed.success) {
+      const errors = parsed.error.errors.map((error) => error.message);
+      return res.status(400).json({ errors });
+    }
+
+    const { id } = parsed.data;
+    const ctx = await prisma.sponsorGroup.delete({
+      where: { id },
+    });
+
+    if (!ctx) return res.status(500).json({ error: "Failed to delete sponsor" });
+
+    return res.status(200).json({ message: "Sponsor deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+export { getSponsors, uploadSponsor, createSponsorGroup, deleteSponsor };

@@ -63,7 +63,7 @@ const login = async (req: Request, res: Response): Promise<any> => {
       httpOnly: true,
       sameSite: "strict",
       // valid for 45 minutes (1 minute for testing)
-      maxAge: 1 * 60 * 1000,
+      maxAge: 45 * 60 * 1000,
     });
 
     res.cookie("refreshToken", refreshToken, {
@@ -137,6 +137,17 @@ const refresh = async (req: Request, res: Response): Promise<any> => {
     return res.status(400).json({ message: "Unauthorized" });
   }
 
+  const { id } = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET) as { id: string };
+  const dbRefreshToken = await prisma.refreshToken.findUnique({
+    where: { userId: id },
+    select: { token: true, revoked: true },
+  });
+
+  if (!dbRefreshToken || dbRefreshToken.revoked) return res.status(400).json({ message: "Unauthorized" });
+
+  const isMatch = await bcrypt.compare(refreshToken, dbRefreshToken.token);
+  if (!isMatch) return res.status(400).json({ message: "Unauthorized" });
+
   try {
     const { id } = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET) as { id: string };
 
@@ -160,14 +171,14 @@ const refresh = async (req: Request, res: Response): Promise<any> => {
         },
       });
 
-      if (!ctx) return res.status(500).json({ message: "Internal Server Error  1" });
+      if (!ctx) return res.status(500).json({ message: "Internal Server Error" });
 
       res.cookie("token", newAccessToken, {
         secure: true,
         httpOnly: true,
         sameSite: "strict",
         // valid for 45 minutes (1 minute for testing)
-        maxAge: 1 * 60 * 1000,
+        maxAge: 45 * 60 * 1000,
       });
 
       res.cookie("refreshToken", newRefreshToken, {
@@ -181,10 +192,10 @@ const refresh = async (req: Request, res: Response): Promise<any> => {
 
       return res.status(200).json(true);
     } catch (error) {
-      return res.status(500).json({ message: "Internal Server Error  3" });
+      return res.status(500).json({ message: "Internal Server Error" });
     }
   } catch (error) {
-    if (error instanceof TokenExpiredError) return res.status(401).json({ message: "Unauthorized 2" });
+    if (error instanceof TokenExpiredError) return res.status(401).json({ message: "Unauthorized" });
   }
 };
 

@@ -6,7 +6,7 @@ import UpdatePostSchema from "../schemas/UpdatePostSchema";
 import DeletePostSchema from "../schemas/DeletePostSchema";
 
 const generateSlugForPost = async (title: string): Promise<string> => {
-  return encodeURI(title);
+  return encodeURI(title).toLowerCase();
 };
 
 const createPost = async (req: Request, res: Response): Promise<any> => {
@@ -14,13 +14,11 @@ const createPost = async (req: Request, res: Response): Promise<any> => {
   const parsed = PostSchema.safeParse(body);
   const userId = (req as any).user.id;
 
-  // if (!parsed.success) {
   if (!parsed.success) {
     const errors = parsed.error.errors.map((error) => error.message);
 
     return res.status(400).json({ errors });
   }
-  // }
 
   const { title, content, shortDesc } = parsed.data;
   const slug = await generateSlugForPost(title);
@@ -74,6 +72,7 @@ const getAllPost = async (req: Request, res: Response): Promise<any> => {
       shortDesc: true,
       slug: true,
       bannerURL: true,
+      publishedAt: true,
     },
   });
 
@@ -95,53 +94,74 @@ const updatePost = async (req: Request, res: Response): Promise<any> => {
   const slug = await generateSlugForPost(title);
 
   if (role === "admin") {
-    const ctx = await prisma.post.update({
-      where: { id: postId },
-      data: { title, slug, content, shortDesc, modifiedAt: new Date() },
-    });
+    try {
+      const ctx = await prisma.post.update({
+        where: { id: postId },
+        data: { title, slug, content, shortDesc, modifiedAt: new Date() },
+      });
 
-    if (!ctx) return res.status(404).json({ message: "No post found" });
-    return res.status(200).json({ message: "Post updated successfully" });
+      if (!ctx) return res.status(404).json({ message: "No post found" });
+      return res.status(200).json({ message: "Post updated successfully" });
+    } catch (error) {
+      return res.status(500).json({ message: "Failed to update post" });
+    }
   } else {
-    const ctx = await prisma.post.update({
-      where: { id: postId, publishedById: user.id },
-      data: { title, slug, content, shortDesc, modifiedAt: new Date() },
-    });
+    try {
+      const ctx = await prisma.post.update({
+        where: { id: postId, publishedById: user.id },
+        data: { title, slug, content, shortDesc, modifiedAt: new Date() },
+      });
 
-    if (!ctx) return res.status(404).json({ message: "No post found" });
-    return res.status(200).json({ message: "Post updated successfully" });
+      if (!ctx) return res.status(404).json({ message: "No post found" });
+      return res.status(200).json({ message: "Post updated successfully" });
+    } catch (error) {
+      return res.status(500).json({ message: "Failed to update post" });
+    }
   }
 };
 
 const deletePost = async (req: Request, res: Response): Promise<any> => {
   const user = (req as any).user;
   const role = await userRole(user);
-
   const body = req.body;
-  const parsed = DeletePostSchema.safeParse(body);
 
-  if (!parsed.success) {
-    return res.status(400).json({ message: "Invalid post data" });
-  }
+  const parsed = DeletePostSchema.safeParse(body);
+  if (!parsed.success) return res.status(400).json({ message: "Invalid post data" });
 
   const { postId } = parsed.data;
-  if (role === "admin") {
-    const ctx = await prisma.post.delete({
-      where: { id: postId },
+
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+      const post = await tx.post.findUnique({
+        where: {
+          id: postId,
+        },
+        select: {
+          id: true,
+          publishedById: true,
+        },
+      });
+
+      if (!post) return res.status(404).json({ message: "No post found" });
+
+      if (role === "writer" && post.publishedById !== user.id) {
+        return res.status(403).json({ message: "You are not authorized to delete this post" });
+      }
+
+      const deletedPost = await tx.post.delete({
+        where: {
+          id: postId,
+          ...(role === "writer" && { publishedById: user.id }),
+        },
+      });
+
+      if (!deletedPost) return res.status(404).json({ message: "No post found" });
+
+      return res.status(200).json({ message: "Post deleted successfully" });
     });
-
-    if (!ctx) return res.status(404).json({ message: "No post found" });
-
-    return res.status(200).json({ message: "Post deleted successfully" });
+  } catch (error) {
+    return res.status(500).json({ message: "Failed to delete post" });
   }
-
-  const ctx = await prisma.post.delete({
-    where: { id: postId, publishedById: user.id },
-  });
-
-  if (!ctx) return res.status(404).json({ message: "No post found or user is not authorized to delete this post!" });
-
-  return res.status(200).json({ message: "Post deleted successfully" });
 };
 
 export { createPost, getPost, getAllPost, updatePost, deletePost };
