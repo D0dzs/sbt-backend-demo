@@ -61,7 +61,7 @@ const createSponsorGroup = async (req: Request, res: Response): Promise<any> => 
   const user = (req as any).user;
   const role = await userRole(user);
   if (role !== "admin") {
-    return res.status(403).json({ error: "Unauthorized" });
+    return res.status(401).json({ error: "Unauthorized" });
   }
 
   try {
@@ -92,7 +92,7 @@ const deleteSponsor = async (req: Request, res: Response): Promise<any> => {
   const user = (req as any).user;
   const role = await userRole(user);
   if (role !== "admin") {
-    return res.status(403).json({ error: "Unauthorized" });
+    return res.status(401).json({ error: "Unauthorized" });
   }
 
   try {
