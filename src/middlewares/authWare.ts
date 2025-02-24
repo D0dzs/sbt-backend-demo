@@ -14,11 +14,16 @@ const authWare = async (req: Request, res: Response, next: any) => {
   if (!accessToken) return res.status(401).json({ message: "Unauthorized" });
 
   // Check if token is expired otherwise return unauthorized
-  const exp = accessToken.split(".")[1];
-  const dPaylod = JSON.parse(atob(exp));
-  const expirationTime = dPaylod.exp * 1000;
-  const expired = Date.now() > expirationTime;
-  if (expired) return res.status(401).json({ message: "Unauthorized" });
+  // EDIT: This might be not the best way to do it, and might need to be changed
+  try {
+    const exp = accessToken.split(".")[1];
+    const dPaylod = JSON.parse(atob(exp));
+    const expirationTime = dPaylod.exp * 1000;
+    const expired = Date.now() > expirationTime;
+    if (expired) return res.status(401).json({ message: "Unauthorized" });
+  } catch (error) {
+    return res.status(401).json({ message: "Failed to decode token" });
+  }
 
   const decoded = jwt.verify(accessToken, ACCESS_TOKEN_SECRET) as { id: string };
   const id = decoded.id;
@@ -32,6 +37,7 @@ const authWare = async (req: Request, res: Response, next: any) => {
   if (!user) return res.status(401).json({ message: "Unauthorized" });
 
   (req as any).user = user;
+
   return next();
 };
 
