@@ -7,7 +7,7 @@ const SALT = parseInt(process.env.SALT!);
 
 async function main() {
   // Insert roles
-  const roles = ["ADMIN", "WRITER"];
+  const roles = ["admin", "writer"];
   for (const role of roles) {
     const roleExist = await prisma.role.findUnique({ where: { name: role } });
     if (roleExist) continue;
