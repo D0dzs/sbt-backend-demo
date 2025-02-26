@@ -96,7 +96,7 @@ const getRequestedUser = async (req: Request, res: Response): Promise<any> => {
 
   if (!user) return res.status(404).json({ message: "User not found" });
 
-  const simplyfiedUser = {
+  const simplifiedUser = {
     firstName: user.firstName,
     lastName: user.lastName,
     avatar: user.avatarURL,
@@ -105,7 +105,7 @@ const getRequestedUser = async (req: Request, res: Response): Promise<any> => {
     group: user.Group.map((group) => group.name)[0],
   };
 
-  res.status(200).json({ user: simplyfiedUser });
+  res.status(200).json({ user: simplifiedUser });
 };
 
 const validateToken = async (req: Request, res: Response): Promise<any> => {
