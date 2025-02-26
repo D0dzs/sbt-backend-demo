@@ -36,10 +36,10 @@ async function main() {
   }
 
   // Fetch the ADMIN and WRITER role IDs
-  const adminRole = await prisma.role.findUnique({ where: { name: "ADMIN" }, select: { id: true } });
-  const writerRole = await prisma.role.findUnique({ where: { name: "WRITER" }, select: { id: true } });
+  const adminRole = await prisma.role.findUnique({ where: { name: "admin" }, select: { id: true } });
+  const writerRole = await prisma.role.findUnique({ where: { name: "writer" }, select: { id: true } });
 
-  if (!adminRole || !writerRole) throw new Error("ADMIN or WRITER role not found");
+  if (!adminRole || !writerRole) throw new Error("'admin' or 'writer' role not found");
 
   // Check if admin user already exists
   const adminUserExists = await prisma.user.findUnique({ where: { email: "admin@test.hu" } });

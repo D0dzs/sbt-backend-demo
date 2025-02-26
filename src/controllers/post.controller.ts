@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
 import prisma from "../../lib/db";
 import { userRole } from "../../lib/utils";
+import DeletePostSchema from "../schemas/DeletePostSchema";
 import PostSchema from "../schemas/PostSchema";
 import UpdatePostSchema from "../schemas/UpdatePostSchema";
-import DeletePostSchema from "../schemas/DeletePostSchema";
 
 const generateSlugForPost = async (title: string): Promise<string> => {
   return encodeURI(title).toLowerCase();
@@ -64,7 +64,7 @@ const getPost = async (req: Request, res: Response): Promise<any> => {
   return res.status(200).json(ctx);
 };
 
-const getAllPost = async (req: Request, res: Response): Promise<any> => {
+const getAllPost = async (_req: Request, res: Response): Promise<any> => {
   const posts = await prisma.post.findMany({
     select: {
       title: true,
@@ -164,4 +164,4 @@ const deletePost = async (req: Request, res: Response): Promise<any> => {
   }
 };
 
-export { createPost, getPost, getAllPost, updatePost, deletePost };
+export { createPost, deletePost, getAllPost, getPost, updatePost };

@@ -1,10 +1,10 @@
 import prisma from "../../lib/db";
 
 import { Request, Response } from "express";
-import GroupSchema from "../schemas/GroupSchema";
 import { userRole } from "../../lib/utils";
-import SubGroupSchema from "../schemas/SubGroupSchema";
 import DeleteGroupSchema from "../schemas/DeleteGroupSchema";
+import GroupSchema from "../schemas/GroupSchema";
+import SubGroupSchema from "../schemas/SubGroupSchema";
 
 const createGroup = async (req: Request, res: Response): Promise<any> => {
   const user = (req as any).user;

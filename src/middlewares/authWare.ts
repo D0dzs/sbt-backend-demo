@@ -36,7 +36,15 @@ const authWare = async (req: Request, res: Response, next: any) => {
 
   if (!user) return res.status(401).json({ message: "Unauthorized" });
 
-  (req as any).user = user;
+  const simplyfiedUser = {
+    id: user.id,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    avatar: user.avatarURL,
+    role: user.UserRole.map((role) => role.role.name)[0],
+  };
+
+  (req as any).user = simplyfiedUser;
 
   return next();
 };

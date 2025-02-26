@@ -1,9 +1,8 @@
 import "dotenv/config";
-import prisma from "./db";
 import jwt from "jsonwebtoken";
 
 const userRole = async (user: any): Promise<any> => {
-  return user.UserRole[0].role.name.toLowerCase();
+  return user?.role;
 };
 
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET!;

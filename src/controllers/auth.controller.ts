@@ -2,11 +2,10 @@ import bcrypt from "bcrypt";
 import "dotenv/config";
 
 import { Request, Response } from "express";
-import jwt, { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import prisma from "../../lib/db";
-import { generateRefresh, generateToken, userRole } from "../../lib/utils";
+import { generateRefresh, generateToken } from "../../lib/utils";
 import LoginSchema from "../schemas/LoginFormSchema";
-import UserSchema from "../schemas/UserSchema";
 
 const SALT = process.env.PASSWORD_SALT!;
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET!;
@@ -83,11 +82,6 @@ const login = async (req: Request, res: Response): Promise<any> => {
   return res.status(401).json({ message: "Invalid email or password!" });
 };
 
-const register = async (req: Request, res: Response): Promise<any> => {
-  // TODO: Implement register function
-  return res.status(200).json({ message: "This function is need to be rewritten!" });
-};
-
 const getRequestedUser = async (req: Request, res: Response): Promise<any> => {
   const token = req.cookies.token;
   if (!token) return res.status(401).json({ message: "Unauthorized" });
@@ -95,18 +89,23 @@ const getRequestedUser = async (req: Request, res: Response): Promise<any> => {
   const { id } = jwt.verify(token, ACCESS_TOKEN_SECRET) as { id: string };
 
   const user = await prisma.user.findUnique({
-    select: {
-      firstName: true,
-      lastName: true,
-      createdAt: true,
-      UserRole: { select: { role: { select: { name: true } } } },
-    },
+    omit: { password: true },
     where: { id },
+    include: { UserRole: { select: { role: { select: { name: true } } } }, Group: true },
   });
 
   if (!user) return res.status(404).json({ message: "User not found" });
 
-  res.status(200).json({ user });
+  const simplyfiedUser = {
+    firstName: user.firstName,
+    lastName: user.lastName,
+    avatar: user.avatarURL,
+    createdAt: user.createdAt,
+    role: user.UserRole.map((role) => role.role.name)[0],
+    group: user.Group.map((group) => group.name)[0],
+  };
+
+  res.status(200).json({ user: simplyfiedUser });
 };
 
 const validateToken = async (req: Request, res: Response): Promise<any> => {
@@ -186,4 +185,4 @@ const logout = async (req: Request, res: Response): Promise<any> => {
   }
 };
 
-export { getRequestedUser, login, logout, validateToken, register };
+export { getRequestedUser, login, logout, validateToken };

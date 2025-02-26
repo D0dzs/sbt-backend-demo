@@ -2,10 +2,10 @@ import { Request, Response } from "express";
 import fs from "fs";
 import { validateMIMEType } from "validate-image-type";
 import prisma, { getCategoryByName } from "../../lib/db";
-import SponsorSchema from "../schemas/SponsorSchema";
-import SponsorGroupSchema from "../schemas/SponsorGroupSchema";
 import { userRole } from "../../lib/utils";
 import DeleteSponsorSchema from "../schemas/DeleteSponsorSchema";
+import SponsorGroupSchema from "../schemas/SponsorGroupSchema";
+import SponsorSchema from "../schemas/SponsorSchema";
 
 const uploadSponsor = async (req: Request, res: Response): Promise<any> => {
   try {
@@ -117,4 +117,4 @@ const deleteSponsor = async (req: Request, res: Response): Promise<any> => {
   }
 };
 
-export { getSponsors, uploadSponsor, createSponsorGroup, deleteSponsor };
+export { createSponsorGroup, deleteSponsor, getSponsors, uploadSponsor };

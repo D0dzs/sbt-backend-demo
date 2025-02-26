@@ -1,6 +1,6 @@
 import { Router } from "express";
-import authWare from "../middlewares/authWare";
 import { createGroup, createSubGroup, deleteGroup } from "../controllers/group.controller";
+import authWare from "../middlewares/authWare";
 
 const groupRouter = Router();
 
