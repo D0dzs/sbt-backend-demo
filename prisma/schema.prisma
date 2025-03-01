@@ -17,12 +17,128 @@ model User {
   createdAt DateTime @default(now())
   avatarURL String?
 
-  Post     Post[]
-  Group    Group[]
-  UserRole UserRole[]
+  Post         Post[]
+  Group        Group[]
+  UserRole     UserRole[]
+  GroupRole    GroupRole[]
+  SubGroupRole SubGroupRole[]
   RefreshToken RefreshToken[]
 
   @@map("users")
+}
+
+model Role {
+  id   String @id @default(cuid())
+  name String @unique
+
+  UserRole UserRole[]
+
+  @@map("roles")
+}
+
+model UserRole {
+  role Role @relation(fields: [roleID], references: [id])
+  user User @relation(fields: [userID], references: [id])
+
+  roleID String
+  userID String
+
+  @@id([roleID, userID])
+  @@map("user_roles")
+}
+
+model SponsorGroup {
+  id   String @id @default(cuid())
+  name String @unique
+
+  Sponsor Sponsor[]
+
+  @@map("sponsor_groups")
+}
+
+model Sponsor {
+  id             String @id @default(cuid())
+  name           String @unique
+  logoUrl        String
+  websiteUrl     String
+  sponsorGroupID String
+
+  sponsorGroup SponsorGroup @relation(fields: [sponsorGroupID], references: [id], onDelete: Cascade)
+
+  @@map("sponsors")
+}
+
+model SubGroup {
+  id          String @id @default(cuid())
+  name        String @unique
+  description String
+  groupId     String
+
+  Group            Group              @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  SubGroupPosition SubGroupPosition[]
+
+  @@map("sub_groups")
+}
+
+model SubGroupPosition {
+  id         String @id @default(cuid())
+  name       String @unique
+  subGroupID String
+
+  subGroup     SubGroup       @relation(fields: [subGroupID], references: [id], onDelete: Cascade)
+  SubGroupRole SubGroupRole[]
+
+  @@map("subgroup_positions")
+}
+
+model SubGroupRole {
+  subGroupID         String
+  userId             String
+  SubGroupPositionID String
+
+  User             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  SubGroupPosition SubGroupPosition @relation(fields: [SubGroupPositionID], references: [id], onDelete: Cascade)
+
+  @@id([userId, subGroupID])
+  @@map("sub_group_roles")
+}
+
+model Group {
+  id          String @id @default(cuid())
+  name        String @unique
+  description String
+  leaderID    String
+
+  leader    User            @relation(fields: [leaderID], references: [id], onDelete: Cascade)
+  SubGroup  SubGroup[]
+  Position  GroupPosition[]
+  GroupRole GroupRole[]
+
+  @@map("groups")
+}
+
+model GroupPosition {
+  id      String @id @default(cuid())
+  name    String @unique
+  groupID String
+
+  group     Group       @relation(fields: [groupID], references: [id], onDelete: Cascade)
+  GroupRole GroupRole[]
+
+  @@map("group_positions")
+}
+
+model GroupRole {
+  userID     String
+  groupID    String
+  positionID String
+
+  user     User          @relation(fields: [userID], references: [id], onDelete: Cascade)
+  group    Group         @relation(fields: [groupID], references: [id], onDelete: Cascade)
+  position GroupPosition @relation(fields: [positionID], references: [id], onDelete: Cascade)
+
+  @@id([userID, groupID])
+  @@map("group_roles")
 }
 
 model Post {
@@ -41,76 +157,13 @@ model Post {
   @@map("posts")
 }
 
-model Role {
-  id   String @id @default(cuid())
-  name String @unique
-
-  UserRole UserRole[]
-
-  @@map("roles")
-}
-
-model Group {
-  id          String @id @default(cuid())
-  name        String @unique
-  description String
-  leaderId    String
-
-  leader   User       @relation(fields: [leaderId], references: [id])
-  SubGroup SubGroup[]
-
-  @@map("groups")
-}
-
-model SubGroup {
-  id      String @id @default(cuid())
-  name    String @unique
-  groupId String
-
-  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
-
-  @@map("sub_groups")
-}
-
-model UserRole {
-  role Role @relation(fields: [roleId], references: [id])
-  user User @relation(fields: [userId], references: [id])
-
-  roleId String
-  userId String
-
-  @@id([roleId, userId])
-  @@map("user_roles")
-}
-
-model SponsorGroup {
-  id   String @id @default(cuid())
-  name String @unique
-
-  Sponsor Sponsor[]
-
-  @@map("sponsor_groups")
-}
-
-model Sponsor {
-  id             String @id @default(cuid())
-  name           String
-  logoUrl        String
-  websiteUrl     String
-  sponsorGroupId String
-
-  sponsorGroup SponsorGroup @relation(fields: [sponsorGroupId], references: [id], onDelete: Cascade)
-
-  @@map("sponsors")
-}
-
 model RefreshToken {
-  id        String @id @default(cuid())
-  token     String @unique
-  userId    String @unique
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String   @unique
   createdAt DateTime @default(now())
   expiresAt DateTime
-  revoked   Boolean @default(false)
+  revoked   Boolean  @default(false)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

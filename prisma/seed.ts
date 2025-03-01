@@ -42,8 +42,8 @@ async function main() {
   if (!adminRole || !writerRole) throw new Error("'admin' or 'writer' role not found");
 
   // Check if admin user already exists
-  const adminUserExists = await prisma.user.findUnique({ where: { email: "admin@test.hu" } });
-  const writerUserExists = await prisma.user.findUnique({ where: { email: "writer@test.hu" } });
+  const adminUserExists = await prisma.user.findUnique({ where: { email: "admin@test.hu" }, select: { id: true } });
+  const writerUserExists = await prisma.user.findUnique({ where: { email: "writer@test.hu" }, select: { id: true } });
 
   if (adminUserExists && writerUserExists) {
     console.log("Admin and Writer user already exists. Skipping seeding.");
@@ -94,6 +94,33 @@ async function main() {
   console.log(
     "Admin and Writer users seeded successfully\n\nUsername: admin@test.hu\nPassword: admin\n\nUsername: writer@test.hu\nPassword: writer",
   );
+
+  // create template posts
+  const createPost = await prisma.post.create({
+    data: {
+      title: "First Post",
+      slug: "first-post",
+      content: "This is the first post.",
+      shortDesc: "This is the first post.",
+      publishedAt: new Date(),
+      publishedById: adminUser.id,
+    },
+  });
+
+  const createSecondPost = await prisma.post.create({
+    data: {
+      title: "Second Post",
+      slug: "second-post",
+      content: "This is the second post.",
+      shortDesc: "This is the second post.",
+      publishedAt: new Date(),
+      publishedById: writerUser.id,
+    },
+  });
+
+  if (createPost && createSecondPost) {
+    console.log("Posts seeded successfully");
+  }
 }
 
 main()
