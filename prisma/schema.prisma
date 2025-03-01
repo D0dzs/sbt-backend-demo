@@ -17,11 +17,12 @@ model User {
   createdAt DateTime @default(now())
   avatarURL String?
 
-  Post         Post[]
-  Group        Group[]
   UserRole     UserRole[]
+  Group        Group[]
   GroupRole    GroupRole[]
+  SubGroup     SubGroup[]
   SubGroupRole SubGroupRole[]
+  Post         Post[]
   RefreshToken RefreshToken[]
 
   @@map("users")
@@ -73,7 +74,9 @@ model SubGroup {
   name        String @unique
   description String
   groupId     String
+  leaderID    String
 
+  leader           User               @relation(fields: [leaderID], references: [id], onDelete: Cascade)
   Group            Group              @relation(fields: [groupId], references: [id], onDelete: Cascade)
   SubGroupPosition SubGroupPosition[]
 

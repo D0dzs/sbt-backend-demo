@@ -10,13 +10,11 @@ import RegisterUserSchema from "../schemas/RegisterUserSchema";
 const SALT = process.env.PASSWORD_SALT!;
 
 const getAllUsers = async (req: Request, res: Response): Promise<any> => {
-  const { id, role } = (req as any).user;
+  const { role } = (req as any).user;
   if (role !== "admin") return res.status(403).json({ message: "Forbidden" });
 
   const users = await prisma.user.findMany({
-    where: { id: { not: id } },
     select: {
-      email: true,
       firstName: true,
       lastName: true,
       state: true,
@@ -25,7 +23,6 @@ const getAllUsers = async (req: Request, res: Response): Promise<any> => {
   });
 
   const cleanUsers = users.map((user) => ({
-    email: user.email,
     firstName: user.firstName,
     lastName: user.lastName,
     state: user.state,
@@ -168,7 +165,7 @@ const updateUserRole = async (req: Request, res: Response): Promise<any> => {
     if (!newRoleID) return res.status(404).json({ message: "Role not found" });
 
     const currentUserRole = await prisma.userRole.findFirst({
-      where: { userId: targetUserID.id },
+      where: { userID: targetUserID.id },
       include: { role: true },
     });
 
@@ -193,9 +190,9 @@ const updateUserRole = async (req: Request, res: Response): Promise<any> => {
       data: {
         UserRole: {
           updateMany: {
-            where: { userId: targetUserID.id },
+            where: { userID: targetUserID.id },
             data: {
-              roleId: newRoleID.id,
+              roleID: newRoleID.id,
             },
           },
         },

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "license": "MIT",
   "scripts": {
-    "dev": "nodemon --exec \"ts-node --transpile-only ./src/index.ts\"",
+    "dev": "nodemon ./src/index.ts",
     "initPrisma": "pnpx prisma migrate dev --name \"init\""
   },
   "dependencies": {

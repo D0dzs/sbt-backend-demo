@@ -36,7 +36,7 @@ const uploadSponsor = async (req: Request, res: Response): Promise<any> => {
         name: sName,
         logoUrl: filePath,
         websiteUrl: sWebUrl,
-        sponsorGroupId: categoryId,
+        sponsorGroupID: categoryId,
       },
     });
 
