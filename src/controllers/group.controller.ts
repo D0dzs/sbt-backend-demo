@@ -3,18 +3,149 @@ import prisma from "../../lib/db";
 import { Request, Response } from "express";
 import { userRole } from "../../lib/utils";
 import AssignUserGroupFormSchema from "../schemas/AssignUserGroupForm";
-import CreateGroupPositionSchema from "../schemas/CreateGroupPositionSchema";
-import DeleteGroupSchema from "../schemas/DeleteGroupSchema";
+// import DeleteGroupSchema from "../schemas/DeleteGroupSchema";
 import GroupSchema from "../schemas/GroupSchema";
 
 const requestGroup = async (req: Request, res: Response): Promise<any> => {
-  const groups = await prisma.group.findMany({
-    omit: { id: true, leaderID: true },
-    include: { SubGroup: { omit: { groupId: true, id: true } } },
-  });
-  if (!groups) return res.status(404).json({ message: "Groups not found" });
+  try {
+    // First get all groups with their IDs
+    const groups = await prisma.group.findMany({
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        leaderID: true,
+      },
+    });
 
-  return res.status(200).json({ groups });
+    if (!groups || groups.length === 0) {
+      return res.status(404).json({ message: "Groups not found" });
+    }
+
+    // Process each group to get the complete data structure
+    const processedGroups = await Promise.all(
+      groups.map(async (group) => {
+        // Get leader information
+        const leader = await prisma.user.findUnique({
+          where: { id: group.leaderID },
+          select: {
+            lastName: true,
+            firstName: true,
+            avatarURL: true,
+            // Get roles for this leader in this specific group
+            GroupRole: {
+              where: { groupID: group.id },
+              select: { position: true },
+            },
+          },
+        });
+
+        // Get all group roles for this group (excluding leader)
+        const groupRoles = await prisma.groupRole.findMany({
+          where: {
+            groupID: group.id,
+            NOT: { userID: group.leaderID },
+          },
+          select: {
+            position: true,
+            user: {
+              select: {
+                lastName: true,
+                firstName: true,
+                avatarURL: true,
+              },
+            },
+          },
+        });
+
+        // Get all subgroups for this group
+        const subGroups = await prisma.subGroup.findMany({
+          where: { groupId: group.id },
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            leaderID: true,
+          },
+        });
+
+        // Process each subgroup
+        const processedSubGroups = await Promise.all(
+          subGroups.map(async (subGroup) => {
+            // Get subgroup leader information
+            const subGroupLeader = await prisma.user.findUnique({
+              where: { id: subGroup.leaderID },
+              select: {
+                lastName: true,
+                firstName: true,
+                avatarURL: true,
+                // Get roles for this leader in this specific subgroup
+                SubGroupRole: {
+                  where: { subGroupID: subGroup.id },
+                  select: { position: true },
+                },
+              },
+            });
+
+            // Get all subgroup roles (excluding leader)
+            const subGroupRoles = await prisma.subGroupRole.findMany({
+              where: {
+                subGroupID: subGroup.id,
+                NOT: { userId: subGroup.leaderID },
+              },
+              select: {
+                position: true,
+                User: {
+                  select: {
+                    lastName: true,
+                    firstName: true,
+                    avatarURL: true,
+                  },
+                },
+              },
+            });
+
+            return {
+              name: subGroup.name,
+              description: subGroup.description,
+              leader: {
+                lastName: subGroupLeader?.lastName,
+                firstName: subGroupLeader?.firstName,
+                avatarURL: subGroupLeader?.avatarURL || null,
+                SubGroupRole: subGroupLeader?.SubGroupRole.length ? subGroupLeader.SubGroupRole : null,
+              },
+              SubGroupRole: subGroupRoles.length ? subGroupRoles : null,
+            };
+          }),
+        );
+
+        // Helper function to convert empty arrays or strings to null
+        const nullifyEmpty = (value: any) => {
+          if (value === "") return null;
+          if (Array.isArray(value) && value.length === 0) return null;
+          return value;
+        };
+
+        return {
+          name: group.name,
+          description: group.description,
+          leader: {
+            lastName: leader?.lastName,
+            firstName: leader?.firstName,
+            avatarURL: leader?.avatarURL || null,
+            GroupRole: leader?.GroupRole.length ? leader.GroupRole : null,
+          },
+          GroupRole: groupRoles.length ? groupRoles : null,
+          SubGroup: processedSubGroups.length ? processedSubGroups : null,
+        };
+      }),
+    );
+
+    return res.status(200).json({ groups: processedGroups });
+  } catch (error) {
+    console.error("Error fetching groups:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
 };
 
 const getGroups = async (req: Request, res: Response): Promise<any> => {
@@ -25,28 +156,6 @@ const getGroups = async (req: Request, res: Response): Promise<any> => {
   if (!groups) return res.status(404).json({ message: "Groups not found" });
 
   return res.status(200).json({ groups });
-};
-
-const getAllGroupRoles = async (req: Request, res: Response): Promise<any> => {
-  const user = (req as any).user;
-  if ((await userRole(user)) !== "admin") {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-
-  const roles = await prisma.groupPosition.findMany({
-    omit: { groupID: true, id: true },
-    include: {
-      group: {
-        select: {
-          name: true,
-        },
-      },
-    },
-  });
-
-  if (!roles) return res.status(404).json({ message: "Group roles not found" });
-
-  return res.status(200).json({ roles });
 };
 
 const createGroup = async (req: Request, res: Response): Promise<any> => {
@@ -79,7 +188,7 @@ const createGroup = async (req: Request, res: Response): Promise<any> => {
     const ctx = await prisma.group.create({
       data: {
         name: name,
-        description: description,
+        description: description ?? "",
         leaderID: leaderId.id,
       },
     });
@@ -93,54 +202,6 @@ const createGroup = async (req: Request, res: Response): Promise<any> => {
         .json({ message: "This group already exists, please change the name of the group to something else!" });
     }
   }
-  return res.status(500).json({ message: "Internal server error" });
-};
-
-const createGroupPosition = async (req: Request, res: Response): Promise<any> => {
-  const user = (req as any).user;
-  if ((await userRole(user)) !== "admin") {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-
-  const body = req.body;
-  const parsed = CreateGroupPositionSchema.safeParse(body);
-  if (!parsed.success) {
-    const errors = parsed.error.errors.map((error) => error.message);
-    return res.status(400).json({ errors });
-  }
-
-  const { groupName, roleName } = parsed.data;
-  const groupID = await prisma.group.findUnique({
-    where: {
-      name: groupName,
-    },
-  });
-  if (!groupID) return res.status(404).json({ message: "Group not found" });
-
-  try {
-    const response = await prisma.groupPosition.create({
-      data: {
-        name: roleName,
-        group: {
-          connect: {
-            id: groupID.id,
-          },
-        },
-      },
-    });
-
-    if (!response) return res.status(500).json({ message: "Internal server error" });
-
-    return res.status(200).json({ message: "Group position created succesfully!" });
-  } catch (error) {
-    const target = (error as any).meta.target[0];
-    if (target === "name") {
-      return res.status(400).json({
-        message: "This group position already exists, please change the name of the group to something else!",
-      });
-    }
-  }
-
   return res.status(500).json({ message: "Internal server error" });
 };
 
@@ -163,12 +224,6 @@ const addUserGroupPosition = async (req: Request, res: Response): Promise<any> =
   const cUserID = await prisma.user.findFirst({ where: { firstName, lastName }, select: { id: true } });
   if (!cUserID) return res.status(404).json({ message: "User not found" });
 
-  const cRoleID = await prisma.groupPosition.findFirst({
-    where: { name: rolename },
-    select: { id: true },
-  });
-  if (!cRoleID) return res.status(404).json({ message: "Role not found" });
-
   const cGroupID = await prisma.group.findFirst({
     where: { name: groupname },
     select: { id: true },
@@ -180,7 +235,7 @@ const addUserGroupPosition = async (req: Request, res: Response): Promise<any> =
       data: {
         userID: cUserID.id,
         groupID: cGroupID.id,
-        positionID: cRoleID.id,
+        position: rolename,
       },
     });
 
@@ -192,32 +247,25 @@ const addUserGroupPosition = async (req: Request, res: Response): Promise<any> =
   }
 };
 
-const deleteGroup = async (req: Request, res: Response): Promise<any> => {
-  const user = (req as any).user;
-  if ((await userRole(user)) !== "admin") {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
+// const deleteGroup = async (req: Request, res: Response): Promise<any> => {
+//   const user = (req as any).user;
+//   if ((await userRole(user)) !== "admin") {
+//     return res.status(401).json({ message: "Unauthorized" });
+//   }
 
-  const body = req.body;
-  const parsed = DeleteGroupSchema.safeParse(body);
-  if (!parsed.success) {
-    const errors = parsed.error.errors.map((error) => error.message);
-    return res.status(400).json({ errors });
-  }
+//   const body = req.body;
+//   const parsed = DeleteGroupSchema.safeParse(body);
+//   if (!parsed.success) {
+//     const errors = parsed.error.errors.map((error) => error.message);
+//     return res.status(400).json({ errors });
+//   }
 
-  const { id } = parsed.data;
-  const ctx = await prisma.group.delete({ where: { id: id }, select: { name: true } });
+//   const { id } = parsed.data;
+//   const ctx = await prisma.group.delete({ where: { id: id }, select: { name: true } });
 
-  if (!ctx) return res.status(400).json({ message: "Failed to delete group" });
-  return res.status(200).json({ message: `${ctx.name} deleted succesfully! (All sub-groups were deleted too!)` });
-};
+//   if (!ctx) return res.status(400).json({ message: "Failed to delete group" });
+//   return res.status(200).json({ message: `${ctx.name} deleted succesfully! (All sub-groups were deleted too!)` });
+// };
 
-export {
-  addUserGroupPosition,
-  createGroup,
-  createGroupPosition,
-  deleteGroup,
-  getAllGroupRoles,
-  getGroups,
-  requestGroup,
-};
+// export { addUserGroupPosition, createGroup, deleteGroup, getGroups, requestGroup };
+export { addUserGroupPosition, createGroup, getGroups, requestGroup };

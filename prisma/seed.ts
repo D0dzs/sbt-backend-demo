@@ -92,7 +92,7 @@ async function main() {
   });
 
   console.log(
-    "Admin and Writer users seeded successfully\n\nUsername: admin@test.hu\nPassword: admin\n\nUsername: writer@test.hu\nPassword: writer",
+    "\nAdmin and Writer users seeded successfully\n\nUsername: admin@test.hu\nPassword: admin\n\nUsername: writer@test.hu\nPassword: writer",
   );
 
   // create template posts
@@ -119,7 +119,7 @@ async function main() {
   });
 
   if (createPost && createSecondPost) {
-    console.log("Posts seeded successfully");
+    console.log("\nPosts seeded successfully");
   }
 }
 

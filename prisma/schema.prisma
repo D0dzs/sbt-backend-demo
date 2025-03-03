@@ -76,31 +76,21 @@ model SubGroup {
   groupId     String
   leaderID    String
 
-  leader           User               @relation(fields: [leaderID], references: [id], onDelete: Cascade)
-  Group            Group              @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  SubGroupPosition SubGroupPosition[]
+  SubGroupRole SubGroupRole[]
+  
+  leader       User           @relation(fields: [leaderID], references: [id], onDelete: Cascade)
+  Group        Group          @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
   @@map("sub_groups")
 }
 
-model SubGroupPosition {
-  id         String @id @default(cuid())
-  name       String @unique
-  subGroupID String
-
-  subGroup     SubGroup       @relation(fields: [subGroupID], references: [id], onDelete: Cascade)
-  SubGroupRole SubGroupRole[]
-
-  @@map("subgroup_positions")
-}
-
 model SubGroupRole {
-  subGroupID         String
-  userId             String
-  SubGroupPositionID String
+  subGroupID String
+  userId     String
+  position   String
 
-  User             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  SubGroupPosition SubGroupPosition @relation(fields: [SubGroupPositionID], references: [id], onDelete: Cascade)
+  User     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subgroup SubGroup @relation(fields: [subGroupID], references: [id], onDelete: Cascade)
 
   @@id([userId, subGroupID])
   @@map("sub_group_roles")
@@ -112,33 +102,20 @@ model Group {
   description String
   leaderID    String
 
-  leader    User            @relation(fields: [leaderID], references: [id], onDelete: Cascade)
+  leader    User        @relation(fields: [leaderID], references: [id], onDelete: Cascade)
   SubGroup  SubGroup[]
-  Position  GroupPosition[]
   GroupRole GroupRole[]
 
   @@map("groups")
 }
 
-model GroupPosition {
-  id      String @id @default(cuid())
-  name    String @unique
-  groupID String
-
-  group     Group       @relation(fields: [groupID], references: [id], onDelete: Cascade)
-  GroupRole GroupRole[]
-
-  @@map("group_positions")
-}
-
 model GroupRole {
-  userID     String
-  groupID    String
-  positionID String
+  userID   String
+  groupID  String
+  position String
 
-  user     User          @relation(fields: [userID], references: [id], onDelete: Cascade)
-  group    Group         @relation(fields: [groupID], references: [id], onDelete: Cascade)
-  position GroupPosition @relation(fields: [positionID], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userID], references: [id], onDelete: Cascade)
+  group Group @relation(fields: [groupID], references: [id], onDelete: Cascade)
 
   @@id([userID, groupID])
   @@map("group_roles")

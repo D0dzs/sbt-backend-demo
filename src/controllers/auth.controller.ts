@@ -11,11 +11,6 @@ const SALT = process.env.PASSWORD_SALT!;
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET!;
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET!;
 
-const hashPassword = async (password: string) => {
-  const hash = await bcrypt.hash(password, parseInt(SALT));
-  return hash;
-};
-
 /**
  * Main Functions
  */

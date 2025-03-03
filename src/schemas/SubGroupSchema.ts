@@ -5,7 +5,7 @@ import { z } from "zod";
 // groupName: '',
 const SubGroupSchema = z.object({
   name: z.string({ required_error: "Name is required" }).min(2).max(100),
-  description: z.string({ required_error: "Description is required" }).min(2).max(1000),
+  description: z.string({ required_error: "Description is required" }).optional(),
   leaderName: z.string({ required_error: "Leader name is required" }).min(2).max(100),
   groupName: z.string({ required_error: "Group name is required" }).min(2).max(100),
 });

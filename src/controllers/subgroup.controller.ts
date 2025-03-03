@@ -3,30 +3,7 @@ import prisma from "../../lib/db";
 import { Request, Response } from "express";
 import { userRole } from "../../lib/utils";
 import AssignUserSubGroupFormSchema from "../schemas/AssignUserSubGroupFormSchema";
-import CreateSubGroupPositionSchema from "../schemas/CreateSubGroupPositionSchema";
 import SubGroupSchema from "../schemas/SubGroupSchema";
-
-const requestSubGroup = async (req: Request, res: Response): Promise<any> => {
-  const groups = await prisma.subGroup.findMany({
-    omit: { id: true, leaderID: true, groupId: true },
-  });
-  if (!groups) return res.status(404).json({ message: "Groups not found" });
-
-  return res.status(200).json({ groups });
-};
-
-const getAllSubGroupRoles = async (req: Request, res: Response): Promise<any> => {
-  const user = (req as any).user;
-  if ((await userRole(user)) !== "admin") return res.status(401).json({ message: "Unauthorized" });
-
-  const roles = await prisma.subGroupPosition.findMany({
-    omit: { subGroupID: true, id: true },
-    include: { subGroup: { select: { name: true } } },
-  });
-  if (!roles) return res.status(404).json({ message: "Sub-group roles not found" });
-
-  return res.status(200).json({ roles });
-};
 
 const getSubGroups = async (req: Request, res: Response): Promise<any> => {
   const user = (req as any).user;
@@ -57,12 +34,6 @@ const addUserSubGroupPosition = async (req: Request, res: Response): Promise<any
   const cUserID = await prisma.user.findFirst({ where: { firstName, lastName }, select: { id: true } });
   if (!cUserID) return res.status(404).json({ message: "User not found" });
 
-  const cRoleID = await prisma.subGroupPosition.findFirst({
-    where: { name: rolename },
-    select: { id: true },
-  });
-  if (!cRoleID) return res.status(404).json({ message: "Role not found" });
-
   const cSubGroupID = await prisma.subGroup.findFirst({
     where: { name: subgroupname },
     select: { id: true },
@@ -74,7 +45,7 @@ const addUserSubGroupPosition = async (req: Request, res: Response): Promise<any
       data: {
         userId: cUserID.id,
         subGroupID: cSubGroupID.id,
-        SubGroupPositionID: cRoleID.id,
+        position: rolename,
       },
     });
 
@@ -115,7 +86,7 @@ const createSubGroup = async (req: Request, res: Response): Promise<any> => {
     const ctx = await prisma.subGroup.create({
       data: {
         name: name,
-        description: description,
+        description: description ?? "",
         Group: {
           connect: {
             id: group.id,
@@ -143,44 +114,4 @@ const createSubGroup = async (req: Request, res: Response): Promise<any> => {
   return res.status(500).json({ message: "Internal server error" });
 };
 
-const createSubGroupPosition = async (req: Request, res: Response): Promise<any> => {
-  const user = (req as any).user;
-  if ((await userRole(user)) !== "admin") {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-
-  const body = req.body;
-  const parsed = CreateSubGroupPositionSchema.safeParse(body);
-  if (!parsed.success) {
-    const errors = parsed.error.errors.map((error) => error.message);
-    return res.status(400).json({ errors });
-  }
-
-  const { name, subGroupName } = parsed.data;
-  const subgroupID = await prisma.subGroup.findUnique({
-    where: { name: subGroupName },
-  });
-  if (!subgroupID) return res.status(400).json({ message: "Sub-group not found" });
-  const position = await prisma.subGroupPosition.create({
-    data: {
-      name,
-      subGroup: {
-        connect: {
-          id: subgroupID.id,
-        },
-      },
-    },
-  });
-  if (!position) return res.status(500).json({ message: "Internal server error" });
-
-  return res.status(200).json({ message: "Sub-group position created succesfully!", position });
-};
-
-export {
-  requestSubGroup,
-  createSubGroupPosition,
-  createSubGroup,
-  addUserSubGroupPosition,
-  getSubGroups,
-  getAllSubGroupRoles,
-};
+export { createSubGroup, addUserSubGroupPosition, getSubGroups };
