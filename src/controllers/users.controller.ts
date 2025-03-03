@@ -17,15 +17,14 @@ const getAllUsers = async (req: Request, res: Response): Promise<any> => {
     select: {
       firstName: true,
       lastName: true,
-      state: true,
       UserRole: { select: { role: { select: { name: true } } } },
     },
   });
+  if (!users) return res.status(404).json({ message: "No users found" });
 
   const cleanUsers = users.map((user) => ({
     firstName: user.firstName,
     lastName: user.lastName,
-    state: user.state,
     role: user.UserRole.map((role) => role.role.name)[0] || null,
   }));
 

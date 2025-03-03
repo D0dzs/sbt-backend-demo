@@ -2,12 +2,11 @@ import { Router } from "express";
 import {
   createGroup,
   createGroupPosition,
-  createSubGroup,
-  createSubGroupPosition,
   deleteGroup,
   getGroups,
-  getSubGroups,
   requestGroup,
+  getAllGroupRoles,
+  addUserGroupPosition,
 } from "../controllers/group.controller";
 import authWare from "../middlewares/authWare";
 
@@ -18,11 +17,10 @@ groupRouter.get("/public", requestGroup);
 
 // Private Endpoints
 groupRouter.get("/all", authWare, getGroups);
-groupRouter.get("/all-subgroup", authWare, getSubGroups);
+groupRouter.get("/roles", authWare, getAllGroupRoles);
 groupRouter.post("/create", authWare, createGroup);
 groupRouter.post("/create-position", authWare, createGroupPosition);
-groupRouter.post("/create-subgroup", authWare, createSubGroup);
-groupRouter.post("/create-subgroup-position", authWare, createSubGroupPosition);
+groupRouter.post("/assign-position", authWare, addUserGroupPosition);
 groupRouter.delete("/delete", authWare, deleteGroup);
 
 export default groupRouter;

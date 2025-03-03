@@ -10,6 +10,7 @@ import groupRouter from "./routers/group.router";
 import postRouter from "./routers/post.router";
 import sponsorRouter from "./routers/sponsor.router";
 import userRouter from "./routers/users.router";
+import subGroupRouter from "./routers/subgroup.router";
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/post", postRouter);
 app.use("/api/sponsor", sponsorRouter);
 app.use("/api/group", groupRouter);
+app.use("/api/subgroup", subGroupRouter);
 app.use("/api/users", userRouter);
 
 app.get("/api", (req: Request, res: Response) => {
