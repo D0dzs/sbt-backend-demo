@@ -9,7 +9,7 @@ const getSubGroups = async (req: Request, res: Response): Promise<any> => {
   const user = (req as any).user;
   if ((await userRole(user)) !== "admin") return res.status(401).json({ message: "Unauthorized" });
 
-  const groups = await prisma.subGroup.findMany({ omit: { id: true, leaderID: true } });
+  const groups = await prisma.subGroup.findMany({ omit: { id: true, leaderID: true, groupId: true } });
   if (!groups) return res.status(404).json({ message: "Sub-groups not found" });
 
   return res.status(200).json({ groups });
