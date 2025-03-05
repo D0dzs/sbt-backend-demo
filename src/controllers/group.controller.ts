@@ -4,6 +4,7 @@ import { Request, Response } from "express";
 import { userRole } from "../../lib/utils";
 import AssignUserGroupFormSchema from "../schemas/AssignUserGroupForm";
 // import DeleteGroupSchema from "../schemas/DeleteGroupSchema";
+import RemoveUserFromGroupSchema from "../schemas/RemoveUserFromGroupSchema";
 import GroupSchema from "../schemas/GroupSchema";
 
 const requestGroup = async (req: Request, res: Response): Promise<any> => {
@@ -247,6 +248,79 @@ const addUserGroupPosition = async (req: Request, res: Response): Promise<any> =
   }
 };
 
+const removeUserFromGroup = async (req: Request, res: Response): Promise<any> => {
+  const user = (req as any).user;
+  if ((await userRole(user)) !== "admin") {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  const body = req.body;
+  const parsed = RemoveUserFromGroupSchema.safeParse(body);
+  if (!parsed.success) {
+    const errors = parsed.error.errors.map((error) => error.message);
+    return res.status(400).json({ errors });
+  }
+
+  const { firstName, lastName, group, isItSubGroup } = parsed.data;
+  if (isItSubGroup) {
+    try {
+      const cUserID = await prisma.user.findFirst({
+        where: { AND: [{ firstName: firstName }, { lastName: lastName }] },
+        select: { id: true },
+      });
+      if (!cUserID) return res.status(404).json({ message: "User not found" });
+
+      const cGroupID = await prisma.subGroup.findFirst({
+        where: { name: group },
+        select: { id: true },
+      });
+      if (!cGroupID) return res.status(404).json({ message: "Subgroup not found" });
+
+      const response = await prisma.subGroupRole.delete({
+        where: {
+          userId_subGroupID: {
+            userId: cUserID.id,
+            subGroupID: cGroupID.id,
+          },
+        },
+      });
+
+      if (!response) return res.status(404).json({ message: "Failed to delete user from subgroup" });
+      return res.status(200).json({ message: `${firstName} ${lastName} removed from ${group}!` });
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  } else {
+    try {
+      const cUserID = await prisma.user.findFirst({
+        where: { AND: [{ firstName: firstName }, { lastName: lastName }] },
+        select: { id: true },
+      });
+      if (!cUserID) return res.status(404).json({ message: "User not found" });
+
+      const cGroupID = await prisma.group.findFirst({
+        where: { name: group },
+        select: { id: true },
+      });
+      if (!cGroupID) return res.status(404).json({ message: "Group not found" });
+
+      const response = await prisma.groupRole.delete({
+        where: {
+          userID_groupID: {
+            userID: cUserID.id,
+            groupID: cGroupID.id,
+          },
+        },
+      });
+
+      if (!response) return res.status(404).json({ message: "Failed to delete user from subgroup" });
+      return res.status(200).json({ message: `${firstName} ${lastName} removed from ${group}!` });
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  }
+};
+
 // const deleteGroup = async (req: Request, res: Response): Promise<any> => {
 //   const user = (req as any).user;
 //   if ((await userRole(user)) !== "admin") {
@@ -268,4 +342,4 @@ const addUserGroupPosition = async (req: Request, res: Response): Promise<any> =
 // };
 
 // export { addUserGroupPosition, createGroup, deleteGroup, getGroups, requestGroup };
-export { addUserGroupPosition, createGroup, getGroups, requestGroup };
+export { addUserGroupPosition, createGroup, getGroups, requestGroup, removeUserFromGroup };
