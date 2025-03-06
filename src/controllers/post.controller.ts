@@ -39,15 +39,17 @@ const createPost = async (req: Request, res: Response): Promise<any> => {
       },
     });
 
-    if (ctx) return res.status(200).json({ message: "Post created successfully" });
+    if (ctx) return res.status(200).json({ message: "Poszt sikeresen publikálva!" });
   } catch (error) {
     const target = (error as any).meta.target[0];
     if (target === "slug") {
-      return res.status(400).json({ message: "Slug already exists, please change the title to something else!" });
+      return res
+        .status(400)
+        .json({ message: "Ilyen poszt már létezik, kérjük, változtassa meg a címet valami másra!" });
     }
   }
 
-  return res.status(500).json({ message: "Failed to create post" });
+  return res.status(500).json({ message: "Sikertelen poszt létrehozása!" });
 };
 
 const getPost = async (req: Request, res: Response): Promise<any> => {
@@ -59,7 +61,7 @@ const getPost = async (req: Request, res: Response): Promise<any> => {
     select: { title: true, content: true, shortDesc: true, publishedAt: true },
   });
 
-  if (!ctx) return res.status(404).json({ message: "No post found" });
+  if (!ctx) return res.status(404).json({ message: "Ilyen poszt nem létezik!" });
 
   return res.status(200).json(ctx);
 };
@@ -100,10 +102,10 @@ const updatePost = async (req: Request, res: Response): Promise<any> => {
         data: { title, slug, content, shortDesc, modifiedAt: new Date() },
       });
 
-      if (!ctx) return res.status(404).json({ message: "No post found" });
-      return res.status(200).json({ message: "Post updated successfully" });
+      if (!ctx) return res.status(404).json({ message: "Ilyen poszt nem létezik!" });
+      return res.status(200).json({ message: "Poszt sikeresen frissítve!" });
     } catch (error) {
-      return res.status(500).json({ message: "Failed to update post" });
+      return res.status(500).json({ message: "Sikertelen frissítés!" });
     }
   } else {
     try {
@@ -112,10 +114,10 @@ const updatePost = async (req: Request, res: Response): Promise<any> => {
         data: { title, slug, content, shortDesc, modifiedAt: new Date() },
       });
 
-      if (!ctx) return res.status(404).json({ message: "No post found" });
-      return res.status(200).json({ message: "Post updated successfully" });
+      if (!ctx) return res.status(404).json({ message: "Ilyen poszt nem létezik!" });
+      return res.status(200).json({ message: "Poszt sikeresen frissítve!" });
     } catch (error) {
-      return res.status(500).json({ message: "Failed to update post" });
+      return res.status(500).json({ message: "Sikertelen frissítés!" });
     }
   }
 };
@@ -142,10 +144,10 @@ const deletePost = async (req: Request, res: Response): Promise<any> => {
         },
       });
 
-      if (!post) return res.status(404).json({ message: "No post found" });
+      if (!post) return res.status(404).json({ message: "Poszt nem létezik!" });
 
       if (role === "writer" && post.publishedById !== user.id) {
-        return res.status(403).json({ message: "You are not authorized to delete this post" });
+        return res.status(403).json({ message: "Ehhez a poszt törléséhez nem vagy jogosult!" });
       }
 
       const deletedPost = await tx.post.delete({
@@ -155,12 +157,12 @@ const deletePost = async (req: Request, res: Response): Promise<any> => {
         },
       });
 
-      if (!deletedPost) return res.status(404).json({ message: "No post found" });
+      if (!deletedPost) return res.status(404).json({ message: "Poszt nem található!" });
 
-      return res.status(200).json({ message: "Post deleted successfully" });
+      return res.status(200).json({ message: "Poszt sikeresen törölve!" });
     });
   } catch (error) {
-    return res.status(500).json({ message: "Failed to delete post" });
+    return res.status(500).json({ message: "Poszt törlése sikertelen!" });
   }
 };
 

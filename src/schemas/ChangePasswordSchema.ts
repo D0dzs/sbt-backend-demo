@@ -1,10 +1,10 @@
 import { z } from "zod";
 
 const ChangePasswordSchema = z.object({
-  email: z.string().email(),
+  id: z.string({ required_error: "Felhasználó azonosító kötelező" }),
   password: z
-    .string({ required_error: "New password is required" })
-    .min(6, { message: "Password must be at least 6 characters long" })
+    .string({ required_error: "Új jelszó kötelező" })
+    .min(6, { message: "Jelszó legalább 6 karakter hosszú kell legyen" })
     .max(100),
 });
 

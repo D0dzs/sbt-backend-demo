@@ -2,11 +2,12 @@ import { z } from "zod";
 
 const GroupSchema = z.object({
   name: z
-    .string({ required_error: "Name is required to be filled out!!" })
-    .min(2, { message: "Name must be more than 2 characters!" })
-    .max(100, { message: "Name must less than 100 characters!" }),
-  description: z.string({ required_error: "Description is required to be filled out!" }).optional(),
-  leaderName: z.string({ required_error: "Leader is required to be filled out!" }),
+    .string({ required_error: "Név kötelező!" })
+    .min(2, { message: "Csoport neve legalább 2 karakternél többnek kell lennie!" })
+    .max(100, { message: "Csoport neve maximum 100 karakternél kevesebbnek kell lennie!" }),
+  description: z.string().optional(),
+  firstName: z.string({ required_error: "Keresztnév kötelező!" }),
+  lastName: z.string({ required_error: "Vezetéknév kötelező!" }),
 });
 
 type GroupSchema = z.infer<typeof GroupSchema>;

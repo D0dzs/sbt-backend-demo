@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 const DeletePostSchema = z.object({
-  postId: z.string({ message: "Missing post ID" }),
+  postId: z.string({ message: "ID kötelező!" }),
 });
 type DeletePostSchema = z.infer<typeof DeletePostSchema>;
 

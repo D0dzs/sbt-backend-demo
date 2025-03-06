@@ -1,14 +1,15 @@
 import { Router } from "express";
 import multer from "multer";
-import { createSponsorGroup, uploadSponsor, deleteSponsor } from "../controllers/sponsor.controller";
+import { generateUID } from "../../lib/utils";
+import { createSponsorGroup, deleteSponsor, uploadSponsor } from "../controllers/sponsor.controller";
 import authWare from "../middlewares/authWare";
 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => {
-    cb(null, "uploads/sponsor/");
+    cb(null, "images/sponsors/");
   },
-  filename: (_req, file, cb) => {
-    cb(null, `${Date.now()}-${encodeURI(file.originalname)}`);
+  filename: async (_req, _file, cb) => {
+    cb(null, await generateUID());
   },
 });
 

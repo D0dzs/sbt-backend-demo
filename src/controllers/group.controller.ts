@@ -20,7 +20,7 @@ const requestGroup = async (req: Request, res: Response): Promise<any> => {
     });
 
     if (!groups || groups.length === 0) {
-      return res.status(404).json({ message: "Groups not found" });
+      return res.status(404).json({ message: "Nincs elérhető csoport" });
     }
 
     // Process each group to get the complete data structure
@@ -144,7 +144,6 @@ const requestGroup = async (req: Request, res: Response): Promise<any> => {
 
     return res.status(200).json({ groups: processedGroups });
   } catch (error) {
-    console.error("Error fetching groups:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -154,7 +153,7 @@ const getGroups = async (req: Request, res: Response): Promise<any> => {
   if ((await userRole(user)) !== "admin") return res.status(401).json({ message: "Unauthorized" });
 
   const groups = await prisma.group.findMany({ omit: { id: true, leaderID: true } });
-  if (!groups) return res.status(404).json({ message: "Groups not found" });
+  if (!groups) return res.status(404).json({ message: "Nincs elérhető csoport!" });
 
   return res.status(200).json({ groups });
 };
@@ -173,17 +172,16 @@ const createGroup = async (req: Request, res: Response): Promise<any> => {
     return res.status(400).json({ errors });
   }
 
-  const { name, description, leaderName } = parsed.data;
-  const [firstName, lastName] = leaderName.split(" ");
+  const { name, description, firstName, lastName } = parsed.data;
 
   const leaderId = await prisma.user.findFirst({
-    where: { AND: [{ firstName: firstName }, { lastName: lastName }] },
+    where: { AND: [{ firstName }, { lastName }] },
     select: {
       id: true,
     },
   });
 
-  if (!leaderId) return res.status(403).json({ message: "Failed to fetch the ID" });
+  if (!leaderId) return res.status(403).json({ message: "Felhasználó nem található!" });
 
   try {
     const ctx = await prisma.group.create({
@@ -193,14 +191,12 @@ const createGroup = async (req: Request, res: Response): Promise<any> => {
         leaderID: leaderId.id,
       },
     });
-    if (!ctx) return res.status(400).json({ message: "Failed to create sponsorgroup" });
-    return res.status(200).json({ message: "Sponsorgroup created succesfully!" });
+    if (!ctx) return res.status(400).json({ message: "Sikertelen csoport létrehozása!" });
+    return res.status(200).json({ message: `Sikeresen létre lett hozva a(z) ${name} csoport!` });
   } catch (error) {
     const target = (error as any).meta.target[0];
     if (target === "name") {
-      return res
-        .status(400)
-        .json({ message: "This group already exists, please change the name of the group to something else!" });
+      return res.status(400).json({ message: `Ez a csoport már létezik, kérjük, változtassa meg a csoport nevét!` });
     }
   }
   return res.status(500).json({ message: "Internal server error" });
@@ -219,32 +215,30 @@ const addUserGroupPosition = async (req: Request, res: Response): Promise<any> =
     return res.status(400).json({ errors });
   }
 
-  const { username, rolename, groupname } = parsed.data;
-  const [firstName, lastName] = username.split(" ");
-
-  const cUserID = await prisma.user.findFirst({ where: { firstName, lastName }, select: { id: true } });
-  if (!cUserID) return res.status(404).json({ message: "User not found" });
+  const { id, rolename, groupname } = parsed.data;
 
   const cGroupID = await prisma.group.findFirst({
     where: { name: groupname },
     select: { id: true },
   });
-  if (!cGroupID) return res.status(404).json({ message: "Group not found" });
+  if (!cGroupID) return res.status(404).json({ message: "Csoport nem található!" });
 
   try {
     const ctx = await prisma.groupRole.create({
       data: {
-        userID: cUserID.id,
+        userID: id,
         groupID: cGroupID.id,
         position: rolename,
       },
     });
 
-    if (!ctx) return res.status(400).json({ message: "Failed to assign user to the role" });
+    if (!ctx) return res.status(400).json({ message: "Sikertelen szerepkör hozzárendelés!" });
 
-    return res.status(201).json({ message: "User successfully assigned to the role" });
+    return res.status(201).json({ message: "Sikeres szerepkör hozzárendelés!" });
   } catch (error) {
-    return res.status(500).json({ message: "Internal server error" });
+    return res
+      .status(500)
+      .json({ message: "Ez a felhasználó már rendelkezik ezzel a szerepkörrel ebben a csoportban!" });
   }
 };
 
@@ -268,13 +262,13 @@ const removeUserFromGroup = async (req: Request, res: Response): Promise<any> =>
         where: { AND: [{ firstName: firstName }, { lastName: lastName }] },
         select: { id: true },
       });
-      if (!cUserID) return res.status(404).json({ message: "User not found" });
+      if (!cUserID) return res.status(404).json({ message: "Felhasználó nem található!" });
 
       const cGroupID = await prisma.subGroup.findFirst({
         where: { name: group },
         select: { id: true },
       });
-      if (!cGroupID) return res.status(404).json({ message: "Subgroup not found" });
+      if (!cGroupID) return res.status(404).json({ message: "Alcsoport nem található!" });
 
       const response = await prisma.subGroupRole.delete({
         where: {
@@ -285,8 +279,8 @@ const removeUserFromGroup = async (req: Request, res: Response): Promise<any> =>
         },
       });
 
-      if (!response) return res.status(404).json({ message: "Failed to delete user from subgroup" });
-      return res.status(200).json({ message: `${firstName} ${lastName} removed from ${group}!` });
+      if (!response) return res.status(404).json({ message: "Sikertelen törlés!" });
+      return res.status(200).json({ message: `${firstName} ${lastName} törölve lett ${group} csoportból!` });
     } catch (error) {
       return res.status(500).json({ message: "Internal server error" });
     }
@@ -296,13 +290,13 @@ const removeUserFromGroup = async (req: Request, res: Response): Promise<any> =>
         where: { AND: [{ firstName: firstName }, { lastName: lastName }] },
         select: { id: true },
       });
-      if (!cUserID) return res.status(404).json({ message: "User not found" });
+      if (!cUserID) return res.status(404).json({ message: "Felhasználó nem található" });
 
       const cGroupID = await prisma.group.findFirst({
         where: { name: group },
         select: { id: true },
       });
-      if (!cGroupID) return res.status(404).json({ message: "Group not found" });
+      if (!cGroupID) return res.status(404).json({ message: "Csoport nem található" });
 
       const response = await prisma.groupRole.delete({
         where: {
@@ -313,8 +307,8 @@ const removeUserFromGroup = async (req: Request, res: Response): Promise<any> =>
         },
       });
 
-      if (!response) return res.status(404).json({ message: "Failed to delete user from subgroup" });
-      return res.status(200).json({ message: `${firstName} ${lastName} removed from ${group}!` });
+      if (!response) return res.status(404).json({ message: "Sikertelen törlés!" });
+      return res.status(200).json({ message: `${firstName} ${lastName} törölve lett ${group} csoportból!` });
     } catch (error) {
       return res.status(500).json({ message: "Internal server error" });
     }
@@ -334,8 +328,8 @@ const removeUserFromGroup = async (req: Request, res: Response): Promise<any> =>
 //     return res.status(400).json({ errors });
 //   }
 
-//   const { id } = parsed.data;
-//   const ctx = await prisma.group.delete({ where: { id: id }, select: { name: true } });
+//   const { name } = parsed.data;
+//   const ctx = await prisma.group.delete({ where: { name }});
 
 //   if (!ctx) return res.status(400).json({ message: "Failed to delete group" });
 //   return res.status(200).json({ message: `${ctx.name} deleted succesfully! (All sub-groups were deleted too!)` });

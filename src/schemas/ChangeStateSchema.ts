@@ -1,8 +1,9 @@
 import { z } from "zod";
 
 const ChangeStateSchema = z.object({
-  email: z.string({ required_error: "Email is required" }).email(),
-  state: z.boolean(),
+  id: z.string({ required_error: "Felhasználó azonosító kötelező" }),
+  firstName: z.string({ required_error: "Keresztnév kötelező" }),
+  lastName: z.string({ required_error: "Vezetéknév kötelező" }),
 });
 
 type ChangeStateSchema = z.infer<typeof ChangeStateSchema>;

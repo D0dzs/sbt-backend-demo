@@ -28,10 +28,10 @@ const login = async (req: Request, res: Response): Promise<any> => {
   const { email, password } = parsed.data;
 
   const user = await prisma.user.findFirst({ where: { email: email } });
-  if (!user) return res.status(400).json({ message: "Invalid email or password!" });
+  if (!user) return res.status(400).json({ message: "Helytelen jelszó vagy email!" });
 
   // Check if the user is suspended or not
-  if (user.state) return res.status(403).json({ message: "Your account has been suspended!" });
+  if (user.state) return res.status(403).json({ message: "Ez a fiók fel lett függesztve!" });
 
   const isMatch = await bcrypt.compare(password, user.password);
 
@@ -71,10 +71,12 @@ const login = async (req: Request, res: Response): Promise<any> => {
       maxAge: 5 * 24 * 60 * 60 * 1000,
     });
 
-    return res.status(200).json({ message: "Succesfully logged in!", redirect: "/" });
+    return res
+      .status(200)
+      .json({ message: `Sikeres bejelentkezés mint: ${user.firstName} ${user.lastName}!`, redirect: "/" });
   }
 
-  return res.status(401).json({ message: "Invalid email or password!" });
+  return res.status(401).json({ message: "Helytelen jelszó vagy email!" });
 };
 
 const getRequestedUser = async (req: Request, res: Response): Promise<any> => {
@@ -89,7 +91,7 @@ const getRequestedUser = async (req: Request, res: Response): Promise<any> => {
     include: { UserRole: { select: { role: { select: { name: true } } } }, Group: true },
   });
 
-  if (!user) return res.status(404).json({ message: "User not found" });
+  if (!user) return res.status(404).json({ message: "Felhasználó nem található" });
 
   const simplifiedUser = {
     firstName: user.firstName,
@@ -174,7 +176,7 @@ const logout = async (req: Request, res: Response): Promise<any> => {
     res.clearCookie("token");
     res.clearCookie("refreshToken", { path: "/api/auth/refresh" });
 
-    return res.status(200).json({ message: "Succesfully logged out!", redirect: "/" });
+    return res.status(200).json({ message: "Sikeres kijelentkezés!", redirect: "/" });
   } catch (error) {
     return res.status(500).json({ message: "Internal Server Error" });
   }

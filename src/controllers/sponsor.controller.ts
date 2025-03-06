@@ -10,7 +10,7 @@ import SponsorSchema from "../schemas/SponsorSchema";
 const uploadSponsor = async (req: Request, res: Response): Promise<any> => {
   try {
     const body = req.body;
-    if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+    if (!req.file) return res.status(400).json({ error: "Nincs feltöltött kép!" });
     const parsed = SponsorSchema.safeParse(body);
 
     if (!parsed.success) {
@@ -28,7 +28,7 @@ const uploadSponsor = async (req: Request, res: Response): Promise<any> => {
     const result = await validateMIMEType(filePath, { allowMimeTypes: allowedMimeTypes });
     if (!result.ok) {
       fs.unlinkSync(filePath);
-      return res.status(400).json({ error: "Invalid file type" });
+      return res.status(400).json({ error: "Hibás fájl típus!" });
     }
 
     const ctx = await prisma.sponsor.create({
@@ -40,9 +40,9 @@ const uploadSponsor = async (req: Request, res: Response): Promise<any> => {
       },
     });
 
-    if (!ctx) return res.status(500).json({ error: "Failed to create sponsor" });
+    if (!ctx) return res.status(500).json({ error: "Szponzor létrehozása sikertelen!" });
 
-    return res.status(200).json({ message: "Sponsor uploaded successfully" });
+    return res.status(200).json({ message: "Szponzor feltöltve sikeresen!" });
   } catch (error) {
     res.status(500).json({ error: "Internal Server Error" });
   }
@@ -80,9 +80,9 @@ const createSponsorGroup = async (req: Request, res: Response): Promise<any> => 
       },
     });
 
-    if (!ctx) return res.status(500).json({ error: "Failed to create sponsor group" });
+    if (!ctx) return res.status(500).json({ error: "Szponzor csoport létrehozása sikertelen!" });
 
-    return res.status(200).json({ message: "Sponsor group created successfully" });
+    return res.status(200).json({ message: "Szponzor csoport létrehozva sikeresen!" });
   } catch (error) {
     res.status(500).json({ error: "Internal Server Error" });
   }
@@ -109,9 +109,9 @@ const deleteSponsor = async (req: Request, res: Response): Promise<any> => {
       where: { id },
     });
 
-    if (!ctx) return res.status(500).json({ error: "Failed to delete sponsor" });
+    if (!ctx) return res.status(500).json({ error: "Szponzor törlése sikertelen!" });
 
-    return res.status(200).json({ message: "Sponsor deleted successfully" });
+    return res.status(200).json({ message: "Szponzor sikeresen törölve!" });
   } catch (error) {
     res.status(500).json({ error: "Internal Server Error" });
   }

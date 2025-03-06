@@ -1,9 +1,10 @@
 import { z } from "zod";
 
 const AssignUserSubGroupFormSchema = z.object({
-  username: z.string({ required_error: "User is required" }),
-  subgroupname: z.string({ required_error: "Group name is required" }),
-  rolename: z.string({ required_error: "Role name is required" }),
+  firstName: z.string({ required_error: "Vezetéknév kötelező" }),
+  lastName: z.string({ required_error: "Keresztnév kötelező" }),
+  subgroupname: z.string({ required_error: "Csoport neve kötelező" }),
+  rolename: z.string({ required_error: "Szerepkör neve kötelező" }),
 });
 
 type AssignUserSubGroupFormSchema = z.infer<typeof AssignUserSubGroupFormSchema>;

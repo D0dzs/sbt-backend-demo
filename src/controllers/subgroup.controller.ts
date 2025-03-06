@@ -28,8 +28,7 @@ const addUserSubGroupPosition = async (req: Request, res: Response): Promise<any
     return res.status(400).json({ errors });
   }
 
-  const { username, rolename, subgroupname } = parsed.data;
-  const [firstName, lastName] = username.split(" ");
+  const { firstName, lastName, rolename, subgroupname } = parsed.data;
 
   const cUserID = await prisma.user.findFirst({ where: { firstName, lastName }, select: { id: true } });
   if (!cUserID) return res.status(404).json({ message: "User not found" });

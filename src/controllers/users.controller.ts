@@ -15,16 +15,20 @@ const getAllUsers = async (req: Request, res: Response): Promise<any> => {
 
   const users = await prisma.user.findMany({
     select: {
+      id: true,
       firstName: true,
       lastName: true,
+      state: true,
       UserRole: { select: { role: { select: { name: true } } } },
     },
   });
-  if (!users) return res.status(404).json({ message: "No users found" });
+  if (!users) return res.status(404).json({ message: "Nincs felhasználó regisztrálva" });
 
   const cleanUsers = users.map((user) => ({
+    id: user.id,
     firstName: user.firstName,
     lastName: user.lastName,
+    state: user.state,
     role: user.UserRole.map((role) => role.role.name)[0] || null,
   }));
 
@@ -39,10 +43,10 @@ const register = async (req: Request, res: Response): Promise<any> => {
   const parsed = RegisterUserSchema.safeParse(body);
   if (!parsed.success) {
     const errors = parsed.error.errors.map((error) => error.message);
-
     return res.status(400).json({ errors });
   }
 
+  // TODO: Add avatar upload logic
   try {
     const { email, password, firstName, lastName, role } = parsed.data;
     const hashedPassword = await bcrypt.hash(password, parseInt(SALT));
@@ -53,23 +57,15 @@ const register = async (req: Request, res: Response): Promise<any> => {
         password: hashedPassword,
         firstName,
         lastName,
-        UserRole: {
-          create: {
-            role: {
-              connect: {
-                name: role,
-              },
-            },
-          },
-        },
+        UserRole: { create: { role: { connect: { name: role } } } },
       },
     });
 
-    if (!user) return res.status(500).json({ message: "Failed to create user" });
+    if (!user) return res.status(500).json({ message: "Sikertelen felhasználó létrehozás!" });
 
-    res.status(201).json({ message: "User registered successfully!" });
+    res.status(201).json({ message: "Sikeres regisztráció!" });
   } catch (error) {
-    res.status(500).json({ message: "Failed to register user" });
+    res.status(500).json({ message: "Hiba történt, kérjük próbálja újra 2-3 perc múlva!" });
   }
 };
 
@@ -82,22 +78,29 @@ const changeState = async (req: Request, res: Response): Promise<any> => {
     const parsed = ChangeStateSchema.safeParse(body);
     if (!parsed.success) {
       const errors = parsed.error.errors.map((error) => error.message);
-
       return res.status(400).json({ errors });
     }
 
-    const { email, state } = parsed.data;
+    const { firstName, lastName, id } = parsed.data;
+
+    const targetUserID = await prisma.user.findFirst({
+      where: { id, firstName, lastName },
+      select: { state: true },
+    });
+    if (!targetUserID) return res.status(404).json({ message: "Felhasználó nem található!" });
 
     const user = await prisma.user.update({
-      where: { email },
-      data: { state: !state },
+      where: { id },
+      data: { state: !targetUserID.state },
     });
 
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user) return res.status(404).json({ message: "Felhasználó nem található!" });
 
-    res.status(200).json({ message: "User state changed successfully!" });
+    res.status(200).json({
+      message: `Felhasználó állapota sikeresen módosítva a következőre: ${!user.state ? "Aktív" : "Inaktív"}!`,
+    });
   } catch (error) {
-    res.status(500).json({ message: "Failed to change user state" });
+    res.status(500).json({ message: "Sikertelen felfüggeszés!" });
   }
 };
 
@@ -113,14 +116,11 @@ const changePassword = async (req: Request, res: Response): Promise<any> => {
 
       return res.status(400).json({ errors });
     }
-    const { email, password } = parsed.data;
-
-    const targetUserID = await prisma.user.findUnique({ where: { email }, select: { id: true } });
-    if (!targetUserID) return res.status(404).json({ message: "User not found" });
+    const { id, password } = parsed.data;
 
     try {
       await prisma.refreshToken.updateMany({
-        where: { userId: targetUserID.id },
+        where: { userId: id },
         data: { revoked: true },
       });
     } catch (error) {
@@ -129,16 +129,16 @@ const changePassword = async (req: Request, res: Response): Promise<any> => {
 
     const hashedPassword = await bcrypt.hash(password, parseInt(SALT));
     const user = await prisma.user.update({
-      where: { email },
+      where: { id },
       data: { password: hashedPassword },
     });
 
-    if (!user) return res.status(404).json({ message: "User not found!" });
+    if (!user) return res.status(404).json({ message: "Felhasználó nem található!" });
 
-    res.status(200).json({ message: "User password changed successfully!" });
+    res.status(200).json({ message: "A jelszó sikeresen frissítve lett!" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Failed to update user password" });
+    res.status(500).json({ message: "Sikertelen jelszó frissítés!" });
   }
 };
 
@@ -155,53 +155,44 @@ const updateUserRole = async (req: Request, res: Response): Promise<any> => {
       return res.status(400).json({ errors });
     }
 
-    const { email, newRole } = parsed.data;
-
-    const targetUserID = await prisma.user.findUnique({ where: { email }, select: { id: true } });
-    if (!targetUserID) return res.status(404).json({ message: "User not found" });
+    const { id, newRole } = parsed.data;
 
     const newRoleID = await prisma.role.findUnique({ where: { name: newRole }, select: { id: true } });
-    if (!newRoleID) return res.status(404).json({ message: "Role not found" });
+    if (!newRoleID) return res.status(404).json({ message: "Szerepkör nem található!" });
 
     const currentUserRole = await prisma.userRole.findFirst({
-      where: { userID: targetUserID.id },
+      where: { userID: id },
       include: { role: true },
     });
 
     if (currentUserRole?.role.name === "admin" && newRole !== "admin") {
       const adminCount = await prisma.userRole.count({
-        where: {
-          role: {
-            name: "admin",
-          },
-        },
+        where: { role: { name: "admin" } },
       });
 
       if (adminCount <= 2) {
         return res.status(400).json({
-          message: "Cannot change role. At least two admins must remain in the system.",
+          message: "Sikertelen szerepfrissítés! (Minimum: 2 admin)",
         });
       }
     }
 
     const updateRole = await prisma.user.update({
-      where: { id: targetUserID.id },
+      where: { id },
       data: {
         UserRole: {
           updateMany: {
-            where: { userID: targetUserID.id },
-            data: {
-              roleID: newRoleID.id,
-            },
+            where: { userID: id },
+            data: { roleID: newRoleID.id },
           },
         },
       },
     });
-    if (!updateRole) return res.status(404).json({ message: "User not found!" });
+    if (!updateRole) return res.status(404).json({ message: "Felhasználó nem található!" });
 
-    res.status(200).json({ message: "User role updated successfully!" });
+    res.status(200).json({ message: `Felhasználó szerepe frissítve a következőre: ${newRole}!` });
   } catch (error) {
-    res.status(500).json({ message: "Failed to update user role" });
+    res.status(500).json({ message: "Sikertelen szerep frissítés" });
   }
 };
 

@@ -1,9 +1,9 @@
 import { z } from "zod";
 
 const RemoveUserFromGroupSchema = z.object({
-  firstName: z.string({ required_error: "First name is required" }),
-  lastName: z.string({ required_error: "Last name is required" }),
-  group: z.string({ required_error: "Group is required" }),
+  firstName: z.string({ required_error: "Vezetéknév kötelező!" }),
+  lastName: z.string({ required_error: "Keresztnév kötelező!" }),
+  group: z.string({ required_error: "Csoport kötelező!" }),
   isItSubGroup: z.boolean(),
 });
 type RemoveUserFromGroupSchema = z.infer<typeof RemoveUserFromGroupSchema>;

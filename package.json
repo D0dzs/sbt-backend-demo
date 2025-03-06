@@ -16,6 +16,7 @@
     "dotenv": "^16.4.7",
     "express": "4.21.2",
     "jsonwebtoken": "^9.0.2",
+    "uuid": "^11.1.0",
     "validate-image-type": "^3.0.0",
     "zod": "^3.24.1"
   },
