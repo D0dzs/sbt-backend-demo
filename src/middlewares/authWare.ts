@@ -1,11 +1,11 @@
 import "dotenv/config";
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import prisma from "../../lib/db";
 
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET!;
 
-const authWare = async (req: Request, res: Response, next: any) => {
+const authWare = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
   // If there is no authorization header
   const accessToken = req.cookies.token;
   if (!accessToken) return res.status(401).json({ message: "Unauthorized" });
@@ -46,7 +46,7 @@ const authWare = async (req: Request, res: Response, next: any) => {
 
   (req as any).user = simplyfiedUser;
 
-  return next();
+  next();
 };
 
 export default authWare;

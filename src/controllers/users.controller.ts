@@ -6,6 +6,9 @@ import ChangePasswordSchema from "../schemas/ChangePasswordSchema";
 import ChangeRoleSchema from "../schemas/ChangeRoleSchema";
 import ChangeStateSchema from "../schemas/ChangeStateSchema";
 import RegisterUserSchema from "../schemas/RegisterUserSchema";
+import fs from "fs";
+import { validateMIMEType } from "validate-image-type";
+import path from "path";
 
 const SALT = process.env.PASSWORD_SALT!;
 
@@ -38,16 +41,29 @@ const getAllUsers = async (req: Request, res: Response): Promise<any> => {
 const register = async (req: Request, res: Response): Promise<any> => {
   const { role } = (req as any).user;
   if (role !== "admin") return res.status(403).json({ message: "Forbidden" });
+  if (!req.file) return res.status(400).json({ message: "Avatar is required!" });
 
-  const body = req.body;
-  const parsed = RegisterUserSchema.safeParse(body);
-  if (!parsed.success) {
-    const errors = parsed.error.errors.map((error) => error.message);
-    return res.status(400).json({ errors });
-  }
-
-  // TODO: Add avatar upload logic
   try {
+    const body = req.body;
+    const parsed = RegisterUserSchema.safeParse(body);
+    if (!parsed.success) {
+      fs.unlinkSync(req.file.path);
+      const errors = parsed.error.errors.map((error) => error.message);
+      return res.status(400).json({ errors });
+    }
+
+    const allowedMimeTypes = ["image/jpeg", "image/png", "image/svg+xml", "image/webp"];
+    const filePath = req.file.path;
+    const result = await validateMIMEType(filePath, { allowMimeTypes: allowedMimeTypes });
+
+    if (!result.ok) {
+      fs.unlinkSync(filePath);
+      return res.status(400).json({ message: "Hibás fájl típus!" });
+    }
+
+    const filename = path.basename(filePath);
+    const relativePath = `u/${filename}`;
+
     const { email, password, firstName, lastName, role } = parsed.data;
     const hashedPassword = await bcrypt.hash(password, parseInt(SALT));
 
@@ -57,6 +73,7 @@ const register = async (req: Request, res: Response): Promise<any> => {
         password: hashedPassword,
         firstName,
         lastName,
+        avatarURL: req.file ? relativePath : null,
         UserRole: { create: { role: { connect: { name: role } } } },
       },
     });

@@ -3,13 +3,19 @@ import { changePassword, changeState, getAllUsers, register, updateUserRole } fr
 import authWare from "../middlewares/authWare";
 import multer from "multer";
 import { generateUID } from "../../lib/utils";
+import path from "path";
+
+const destinationDir = path.join(__dirname, "..", "..", "images", "u");
 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => {
-    cb(null, "/images/users/");
+    cb(null, destinationDir);
   },
-  filename: async (_req, _file, cb) => {
-    cb(null, await generateUID());
+  filename: async (_req, file, cb) => {
+    const customID = await generateUID();
+    const fileExtension = path.extname(file.originalname);
+    const finalName = `${customID}${fileExtension}`;
+    cb(null, finalName);
   },
 });
 

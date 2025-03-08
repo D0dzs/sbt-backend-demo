@@ -1,6 +1,6 @@
 import { Router } from "express";
-import authWare from "../middlewares/authWare";
 import { addUserSubGroupPosition, createSubGroup, getSubGroups } from "../controllers/subgroup.controller";
+import authWare from "../middlewares/authWare";
 
 const subGroupRouter = Router();
 
