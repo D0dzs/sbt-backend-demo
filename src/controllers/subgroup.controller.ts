@@ -28,9 +28,9 @@ const addUserSubGroupPosition = async (req: Request, res: Response): Promise<any
     return res.status(400).json({ errors });
   }
 
-  const { firstName, lastName, rolename, subgroupname } = parsed.data;
+  const { id, rolename, subgroupname } = parsed.data;
 
-  const cUserID = await prisma.user.findFirst({ where: { firstName, lastName }, select: { id: true } });
+  const cUserID = await prisma.user.findFirst({ where: { id }, select: { id: true } });
   if (!cUserID) return res.status(404).json({ message: "User not found" });
 
   const cSubGroupID = await prisma.subGroup.findFirst({
@@ -42,7 +42,7 @@ const addUserSubGroupPosition = async (req: Request, res: Response): Promise<any
   try {
     const ctx = await prisma.subGroupRole.create({
       data: {
-        userId: cUserID.id,
+        userId: id,
         subGroupID: cSubGroupID.id,
         position: rolename,
       },
@@ -70,13 +70,12 @@ const createSubGroup = async (req: Request, res: Response): Promise<any> => {
     return res.status(400).json({ errors });
   }
 
-  const { name, description, leaderName, groupName } = parsed.data;
-  const [firstName, lastName] = leaderName.split(" ");
+  const { name, description, id, groupName } = parsed.data;
   const group = await prisma.group.findFirst({ where: { name: groupName }, select: { id: true } });
   if (!group) return res.status(400).json({ message: "Failed to fetch group" });
 
   const leader = await prisma.user.findFirst({
-    where: { AND: [{ firstName: firstName }, { lastName: lastName }] },
+    where: { id },
     select: { id: true },
   });
   if (!leader) return res.status(400).json({ message: "Failed to fetch leader" });
@@ -85,7 +84,7 @@ const createSubGroup = async (req: Request, res: Response): Promise<any> => {
     const ctx = await prisma.subGroup.create({
       data: {
         name: name,
-        description: description ?? "",
+        description: description ?? null,
         Group: {
           connect: {
             id: group.id,
@@ -93,7 +92,7 @@ const createSubGroup = async (req: Request, res: Response): Promise<any> => {
         },
         leader: {
           connect: {
-            id: leader.id,
+            id,
           },
         },
       },

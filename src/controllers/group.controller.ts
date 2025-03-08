@@ -172,13 +172,10 @@ const createGroup = async (req: Request, res: Response): Promise<any> => {
     return res.status(400).json({ errors });
   }
 
-  const { name, description, firstName, lastName } = parsed.data;
+  const { name, description, id } = parsed.data;
 
   const leaderId = await prisma.user.findFirst({
-    where: { AND: [{ firstName }, { lastName }] },
-    select: {
-      id: true,
-    },
+    where: { id },
   });
 
   if (!leaderId) return res.status(403).json({ message: "Felhasználó nem található!" });
@@ -187,8 +184,8 @@ const createGroup = async (req: Request, res: Response): Promise<any> => {
     const ctx = await prisma.group.create({
       data: {
         name: name,
-        description: description ?? "",
-        leaderID: leaderId.id,
+        description: description ?? null,
+        leaderID: id,
       },
     });
     if (!ctx) return res.status(400).json({ message: "Sikertelen csoport létrehozása!" });
@@ -255,11 +252,11 @@ const removeUserFromGroup = async (req: Request, res: Response): Promise<any> =>
     return res.status(400).json({ errors });
   }
 
-  const { firstName, lastName, group, isItSubGroup } = parsed.data;
+  const { firstName, lastName, avatarURL, group, isItSubGroup } = parsed.data;
   if (isItSubGroup) {
     try {
       const cUserID = await prisma.user.findFirst({
-        where: { AND: [{ firstName: firstName }, { lastName: lastName }] },
+        where: { AND: [{ firstName }, { lastName }, { avatarURL }] },
         select: { id: true },
       });
       if (!cUserID) return res.status(404).json({ message: "Felhasználó nem található!" });
@@ -287,7 +284,7 @@ const removeUserFromGroup = async (req: Request, res: Response): Promise<any> =>
   } else {
     try {
       const cUserID = await prisma.user.findFirst({
-        where: { AND: [{ firstName: firstName }, { lastName: lastName }] },
+        where: { AND: [{ firstName }, { lastName }, { avatarURL }] },
         select: { id: true },
       });
       if (!cUserID) return res.status(404).json({ message: "Felhasználó nem található" });

@@ -72,12 +72,12 @@ model Sponsor {
 model SubGroup {
   id          String @id @default(cuid())
   name        String @unique
-  description String
+  description String?
   groupId     String
   leaderID    String
 
   SubGroupRole SubGroupRole[]
-  
+
   leader       User           @relation(fields: [leaderID], references: [id], onDelete: Cascade)
   Group        Group          @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
@@ -99,7 +99,7 @@ model SubGroupRole {
 model Group {
   id          String @id @default(cuid())
   name        String @unique
-  description String
+  description String?
   leaderID    String
 
   leader    User        @relation(fields: [leaderID], references: [id], onDelete: Cascade)

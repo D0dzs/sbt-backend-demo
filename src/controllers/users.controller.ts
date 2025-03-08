@@ -82,7 +82,7 @@ const register = async (req: Request, res: Response): Promise<any> => {
 
     res.status(201).json({ message: "Sikeres regisztráció!" });
   } catch (error) {
-    res.status(500).json({ message: "Hiba történt, kérjük próbálja újra 2-3 perc múlva!" });
+    res.status(500).json({ message: "A megadott email cím már foglalt!" });
   }
 };
 

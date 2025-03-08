@@ -6,8 +6,7 @@ const GroupSchema = z.object({
     .min(2, { message: "Csoport neve legalább 2 karakternél többnek kell lennie!" })
     .max(100, { message: "Csoport neve maximum 100 karakternél kevesebbnek kell lennie!" }),
   description: z.string().optional(),
-  firstName: z.string({ required_error: "Keresztnév kötelező!" }),
-  lastName: z.string({ required_error: "Vezetéknév kötelező!" }),
+  id: z.string({ required_error: "Azonosító kötelező!" }),
 });
 
 type GroupSchema = z.infer<typeof GroupSchema>;
