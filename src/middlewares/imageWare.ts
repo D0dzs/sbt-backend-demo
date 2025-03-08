@@ -12,7 +12,7 @@ const imageWare = async (req: Request, res: Response): Promise<any> => {
 
     // Allow only "s" and "u" as valid paths
     if (!["s", "u"].includes(folder)) {
-      return res.status(400).send("Couldn't find the file");
+      return res.status(400).send("A kép nem található");
     }
 
     // Construct the full file path
@@ -20,12 +20,12 @@ const imageWare = async (req: Request, res: Response): Promise<any> => {
 
     // Prevent directory traversal attacks
     if (!filePath.startsWith(path.join(__dirname, "..", "..", "images"))) {
-      return res.status(400).send("Couldn't find the file");
+      return res.status(400).send("A kép nem található");
     }
 
     // Check if file exists and is not a directory
     if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
-      return res.status(404).send("Couldn't find the file");
+      return res.status(404).send("A kép nem található");
     }
 
     // Define validation options
@@ -37,7 +37,7 @@ const imageWare = async (req: Request, res: Response): Promise<any> => {
     if (valid) {
       return res.sendFile(filePath);
     } else {
-      return res.status(403).send("Not a valid image file");
+      return res.status(403).send("Nem megfelelő képformátum");
     }
   } catch (error) {
     return res.status(500).send("Failed to process request");
