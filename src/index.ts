@@ -5,13 +5,14 @@ import cors from "cors";
 import express, { Request, Response } from "express";
 import cookieParser from "cookie-parser";
 
-import imageWare from "./middlewares/imageWare";
 import authRouter from "./routers/auth.router";
 import groupRouter from "./routers/group.router";
 import postRouter from "./routers/post.router";
 import sponsorRouter from "./routers/sponsor.router";
 import subGroupRouter from "./routers/subgroup.router";
 import userRouter from "./routers/users.router";
+import forecastRouter from "./routers/forecast.router";
+import imageRouter from "./routers/imageProvider.router";
 
 const app = express();
 
@@ -30,8 +31,9 @@ app.use("/api/sponsor", sponsorRouter);
 app.use("/api/group", groupRouter);
 app.use("/api/subgroup", subGroupRouter);
 app.use("/api/users", userRouter);
+app.use("/api/forecast", forecastRouter);
 
-app.get("/cdn/:path/:filename", imageWare);
+app.get("/cdn/:path/:filename", imageRouter);
 
 app.get("/api", (req: Request, res: Response) => {
   res.json("OK!");

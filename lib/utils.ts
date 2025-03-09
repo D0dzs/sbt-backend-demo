@@ -25,4 +25,26 @@ const generateRefresh = async (id: string): Promise<string> => {
   return refreshToken;
 };
 
-export { userRole, generateToken, generateRefresh, generateUID };
+/*
+ * Prefetch the forecast data
+ */
+import memoizee from "memoizee";
+
+const memoizedForecast = memoizee(
+  async (URL: string) => {
+    const response = await fetch(URL);
+    const data = await response.json();
+    return data;
+  },
+  {
+    promise: true,
+    maxAge: 15 * 60 * 1000,
+    preFetch: true,
+    normalizer: () => {
+      const now = new Date();
+      return `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
+    },
+  },
+);
+
+export { userRole, generateToken, generateRefresh, generateUID, memoizedForecast };

@@ -3,7 +3,7 @@ import fs from "fs";
 import { Request, Response } from "express";
 import { validateMIMEType } from "validate-image-type";
 
-const imageWare = async (req: Request, res: Response): Promise<any> => {
+const imageRouter = async (req: Request, res: Response): Promise<any> => {
   // temporarly solution
   if (req.path.endsWith("/")) res.redirect(301, req.path.slice(0, -1));
 
@@ -44,4 +44,4 @@ const imageWare = async (req: Request, res: Response): Promise<any> => {
   }
 };
 
-export default imageWare;
+export default imageRouter;
