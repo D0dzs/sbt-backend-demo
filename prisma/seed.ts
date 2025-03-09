@@ -4,6 +4,8 @@ import prisma from "../lib/db";
 import bcrypt from "bcrypt";
 
 const SALT = parseInt(process.env.SALT!);
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD!;
+const WRITER_PASSWORD = process.env.WRITER_PASSWORD!;
 
 async function main() {
   // Insert roles
@@ -50,8 +52,8 @@ async function main() {
     return;
   }
 
-  const adminHashedPassword = await bcrypt.hash("admin", SALT);
-  const writerHashedPassword = await bcrypt.hash("writer", SALT);
+  const adminHashedPassword = await bcrypt.hash(ADMIN_PASSWORD, SALT);
+  const writerHashedPassword = await bcrypt.hash(WRITER_PASSWORD, SALT);
 
   // Create admin user and assign ADMIN role
   const adminUser = await prisma.user.upsert({
