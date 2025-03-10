@@ -18,7 +18,7 @@ async function main() {
       create: { name: role },
     });
 
-    console.log(`Role "${role}" seeded successfully`);
+    // console.log(`Role "${role}" seeded successfully`);
   }
 
   const sponsorGroups = ["gigawatt", "megawatt", "kilowatt", "bme", "science"];
@@ -32,7 +32,7 @@ async function main() {
       create: { name: group },
     });
 
-    console.log(`Sponsor group "${group}" seeded successfully`);
+    // console.log(`Sponsor group "${group}" seeded successfully`);
   }
 
   // Fetch the ADMIN and WRITER role IDs
@@ -46,7 +46,7 @@ async function main() {
   const writerUserExists = await prisma.user.findUnique({ where: { email: "writer@test.hu" }, select: { id: true } });
 
   if (adminUserExists && writerUserExists) {
-    console.log("Admin and Writer user already exists. Skipping seeding.");
+    // console.log("Admin and Writer user already exists. Skipping seeding.");
     return;
   }
 
@@ -91,9 +91,9 @@ async function main() {
     },
   });
 
-  console.log(
-    "\nAdmin and Writer users seeded successfully\n\nUsername: admin@test.hu\nPassword: admin\n\nUsername: writer@test.hu\nPassword: writer",
-  );
+  // console.log(
+  //   "\nAdmin and Writer users seeded successfully\n\nUsername: admin@test.hu\nPassword: admin\n\nUsername: writer@test.hu\nPassword: writer",
+  // );
 
   // create template posts
   const createPost = await prisma.post.create({
@@ -119,13 +119,13 @@ async function main() {
   });
 
   if (createPost && createSecondPost) {
-    console.log("\nPosts seeded successfully");
+    // console.log("\nPosts seeded successfully");
   }
 }
 
 main()
   .catch((e) => {
-    console.error(e);
+    // console.error(e);
     process.exit(1);
   })
   .finally(async () => {
