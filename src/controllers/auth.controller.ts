@@ -53,23 +53,23 @@ const login = async (req: Request, res: Response): Promise<any> => {
     if (!recordRFTtoDb) return res.status(500).json({ message: "Internal server error" });
 
     res.cookie("token", token, {
-      secure: process.env.NODE_ENV === "production",
+      secure: process.env.RAILWAY_ENVIRONMENT_NAME! === "production",
       httpOnly: false,
       path: "/",
-      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+      sameSite: process.env.RAILWAY_ENVIRONMENT_NAME! === "production" ? "strict" : "lax",
       // valid for 45 minutes (10 minutes for testing)
       maxAge: 45 * 60 * 1000,
-      domain: process.env.NODE_ENV === "production" ? process.env.FRONTEND_URL! : "/",
+      domain: process.env.RAILWAY_ENVIRONMENT_NAME! === "production" ? process.env.FRONTEND_URL! : "/",
     });
 
     res.cookie("refreshToken", refreshToken, {
-      secure: process.env.NODE_ENV === "production",
+      secure: process.env.RAILWAY_ENVIRONMENT_NAME! === "production",
       httpOnly: true,
-      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+      sameSite: process.env.RAILWAY_ENVIRONMENT_NAME! === "production" ? "strict" : "lax",
       path: "/api/auth/refresh",
       // valid for 5 days
       maxAge: 5 * 24 * 60 * 60 * 1000,
-      domain: process.env.NODE_ENV === "production" ? process.env.FRONTEND_URL! : "/",
+      domain: process.env.RAILWAY_ENVIRONMENT_NAME! === "production" ? process.env.FRONTEND_URL! : "/",
     });
 
     return res
@@ -147,21 +147,21 @@ const validateToken = async (req: Request, res: Response): Promise<any> => {
       if (!ctx) return res.status(500).json({ message: "Internal Server Error" });
 
       res.cookie("token", newAccessToken, {
-        secure: process.env.NODE_ENV === "production",
+        secure: process.env.RAILWAY_ENVIRONMENT_NAME! === "production",
         httpOnly: true,
         path: "/",
-        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+        sameSite: process.env.RAILWAY_ENVIRONMENT_NAME! === "production" ? "strict" : "lax",
         maxAge: 45 * 60 * 1000,
-        domain: process.env.NODE_ENV === "production" ? process.env.FRONTEND_URL! : "/",
+        domain: process.env.RAILWAY_ENVIRONMENT_NAME! === "production" ? process.env.FRONTEND_URL! : "/",
       });
 
       res.cookie("refreshToken", newRefreshToken, {
-        secure: process.env.NODE_ENV === "production",
+        secure: process.env.RAILWAY_ENVIRONMENT_NAME! === "production",
         httpOnly: true,
         path: "/api/auth/refresh",
         sameSite: "strict",
         maxAge: 5 * 24 * 60 * 60 * 1000,
-        domain: process.env.NODE_ENV === "production" ? process.env.FRONTEND_URL! : "/",
+        domain: process.env.RAILWAY_ENVIRONMENT_NAME! === "production" ? process.env.FRONTEND_URL! : "/",
       });
 
       return res.status(200).json(true);
