@@ -1,5 +1,4 @@
 import bcrypt from "bcrypt";
-import "dotenv/config";
 
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
@@ -98,8 +97,8 @@ const getRequestedUser = async (req: Request, res: Response): Promise<any> => {
     lastName: user.lastName,
     avatar: user.avatarURL,
     createdAt: user.createdAt,
-    role: user.UserRole.map((role) => role.role.name)[0],
-    group: user.Group.map((group) => group.name)[0],
+    role: user.UserRole.map((role: any) => role.role.name)[0],
+    group: user.Group.map((group: any) => group.name)[0],
   };
 
   res.status(200).json({ user: simplifiedUser });

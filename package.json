@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "license": "MIT",
   "scripts": {
-    "dev": "nodemon ./src/index.ts",
+    "watch": "tsc -w",
+    "dev": "nodemon dist/index.js",
     "setupProjekt": "mkdir images && mkdir images\\s images\\u && pnpx prisma migrate dev --name \"init\""
   },
   "dependencies": {
@@ -13,7 +14,6 @@
     "bcrypt": "^5.1.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.7",
     "express": "4.21.2",
     "jsonwebtoken": "^9.0.2",
     "memoizee": "^0.4.17",
@@ -41,6 +41,7 @@
       "@prisma/client",
       "@prisma/engines",
       "bcrypt",
+      "es5-ext",
       "prisma"
     ]
   },

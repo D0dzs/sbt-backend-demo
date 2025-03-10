@@ -1,4 +1,3 @@
-import "dotenv/config";
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import prisma from "../../lib/db";
@@ -41,7 +40,7 @@ const authWare = async (req: Request, res: Response, next: NextFunction): Promis
     firstName: user.firstName,
     lastName: user.lastName,
     avatar: user.avatarURL,
-    role: user.UserRole.map((role) => role.role.name)[0],
+    role: user.UserRole.map((role: any) => role.role.name)[0],
   };
 
   (req as any).user = simplyfiedUser;

@@ -25,7 +25,7 @@ const requestGroup = async (req: Request, res: Response): Promise<any> => {
 
     // Process each group to get the complete data structure
     const processedGroups = await Promise.all(
-      groups.map(async (group) => {
+      groups.map(async (group: any) => {
         // Get leader information
         const leader = await prisma.user.findUnique({
           where: { id: group.leaderID },
@@ -72,7 +72,7 @@ const requestGroup = async (req: Request, res: Response): Promise<any> => {
 
         // Process each subgroup
         const processedSubGroups = await Promise.all(
-          subGroups.map(async (subGroup) => {
+          subGroups.map(async (subGroup: any) => {
             // Get subgroup leader information
             const subGroupLeader = await prisma.user.findUnique({
               where: { id: subGroup.leaderID },

@@ -133,7 +133,7 @@ const deletePost = async (req: Request, res: Response): Promise<any> => {
   const { postId } = parsed.data;
 
   try {
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: any) => {
       const post = await tx.post.findUnique({
         where: {
           id: postId,

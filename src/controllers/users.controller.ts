@@ -1,5 +1,4 @@
 import bcrypt from "bcrypt";
-import "dotenv/config";
 import { Request, Response } from "express";
 import prisma from "../../lib/db";
 import ChangePasswordSchema from "../schemas/ChangePasswordSchema";
@@ -27,12 +26,12 @@ const getAllUsers = async (req: Request, res: Response): Promise<any> => {
   });
   if (!users) return res.status(404).json({ message: "Nincs felhasználó regisztrálva" });
 
-  const cleanUsers = users.map((user) => ({
+  const cleanUsers = users.map((user: any) => ({
     id: user.id,
     firstName: user.firstName,
     lastName: user.lastName,
     state: user.state,
-    role: user.UserRole.map((role) => role.role.name)[0] || null,
+    role: user.UserRole.map((role: any) => role.role.name)[0] || null,
   }));
 
   res.status(200).json({ users: cleanUsers });
