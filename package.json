@@ -4,7 +4,7 @@
   "license": "MIT",
   "scripts": {
     "watch": "tsc -w",
-    "dev": "nodemon dist/index.js",
+    "dev": "nodemon dist/src/index.js",
     "setupProjekt": "mkdir images && mkdir images\\s images\\u && pnpx prisma migrate dev --name \"init\""
   },
   "dependencies": {
