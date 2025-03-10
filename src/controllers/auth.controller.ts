@@ -56,7 +56,7 @@ const login = async (req: Request, res: Response): Promise<any> => {
       secure: process.env.RAILWAY_ENVIRONMENT_NAME! === "production",
       httpOnly: false,
       path: "/",
-      sameSite: process.env.RAILWAY_ENVIRONMENT_NAME! === "production" ? "strict" : "lax",
+      sameSite: process.env.RAILWAY_ENVIRONMENT_NAME! === "production" ? "none" : "lax",
       // valid for 45 minutes (10 minutes for testing)
       maxAge: 45 * 60 * 1000,
       domain: "sbt-frontend-preview.vercel.app",
@@ -65,7 +65,7 @@ const login = async (req: Request, res: Response): Promise<any> => {
     res.cookie("refreshToken", refreshToken, {
       secure: process.env.RAILWAY_ENVIRONMENT_NAME! === "production",
       httpOnly: true,
-      sameSite: process.env.RAILWAY_ENVIRONMENT_NAME! === "production" ? "strict" : "lax",
+      sameSite: process.env.RAILWAY_ENVIRONMENT_NAME! === "production" ? "none" : "lax",
       path: "/api/auth/refresh",
       // valid for 5 days
       maxAge: 5 * 24 * 60 * 60 * 1000,
@@ -150,7 +150,7 @@ const validateToken = async (req: Request, res: Response): Promise<any> => {
         secure: process.env.RAILWAY_ENVIRONMENT_NAME! === "production",
         httpOnly: true,
         path: "/",
-        sameSite: process.env.RAILWAY_ENVIRONMENT_NAME! === "production" ? "strict" : "lax",
+        sameSite: process.env.RAILWAY_ENVIRONMENT_NAME! === "production" ? "none" : "lax",
         maxAge: 45 * 60 * 1000,
         domain: "sbt-frontend-preview.vercel.app",
       });
@@ -159,7 +159,7 @@ const validateToken = async (req: Request, res: Response): Promise<any> => {
         secure: process.env.RAILWAY_ENVIRONMENT_NAME! === "production",
         httpOnly: true,
         path: "/api/auth/refresh",
-        sameSite: "strict",
+        sameSite: process.env.RAILWAY_ENVIRONMENT_NAME! === "production" ? "none" : "lax",
         maxAge: 5 * 24 * 60 * 60 * 1000,
         domain: "sbt-frontend-preview.vercel.app",
       });
