@@ -59,6 +59,7 @@ const login = async (req: Request, res: Response): Promise<any> => {
       sameSite: process.env.RAILWAY_ENVIRONMENT_NAME! === "production" ? "strict" : "lax",
       // valid for 45 minutes (10 minutes for testing)
       maxAge: 45 * 60 * 1000,
+      domain: "sbt-frontend-preview.vercel.app",
     });
 
     res.cookie("refreshToken", refreshToken, {
@@ -68,6 +69,7 @@ const login = async (req: Request, res: Response): Promise<any> => {
       path: "/api/auth/refresh",
       // valid for 5 days
       maxAge: 5 * 24 * 60 * 60 * 1000,
+      domain: "sbt-frontend-preview.vercel.app",
     });
 
     return res
@@ -150,6 +152,7 @@ const validateToken = async (req: Request, res: Response): Promise<any> => {
         path: "/",
         sameSite: process.env.RAILWAY_ENVIRONMENT_NAME! === "production" ? "strict" : "lax",
         maxAge: 45 * 60 * 1000,
+        domain: "sbt-frontend-preview.vercel.app",
       });
 
       res.cookie("refreshToken", newRefreshToken, {
@@ -158,6 +161,7 @@ const validateToken = async (req: Request, res: Response): Promise<any> => {
         path: "/api/auth/refresh",
         sameSite: "strict",
         maxAge: 5 * 24 * 60 * 60 * 1000,
+        domain: "sbt-frontend-preview.vercel.app",
       });
 
       return res.status(200).json(true);
